@@ -24,9 +24,6 @@ def calculate_rehearsal_cost(total_cost, participants_count, has_discount):
         return 0.0
     
     if has_discount:
-        # Отладка: breakpoint стоял на строке ниже.
-        # При total_cost = 2000.0 в отладчике было видно final_cost = 2400.0
-        # (наценка вместо скидки) — причина: множитель 1.2. Исправлено на 0.8 (скидка 20%).
         final_cost = total_cost * 0.8 
     else:
         final_cost = total_cost
