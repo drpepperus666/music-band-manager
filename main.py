@@ -1,86 +1,132 @@
-from datetime import date
-
-# --- Базовые переменные проекта ---
-band_name = "Nirvana"
-foundation_date = date(2026, 6, 6)
-required_instrument = "Бас-гитара"
-is_active = True
-
-# --- 1. Функция оценки кандидата на вступление в группу ---
-def evaluate_candidate(candidate_instrument, needed_instrument, experience_years):
-    experience_years = int(experience_years)
-    if candidate_instrument != needed_instrument:
-        return "Отказ: Нам нужен другой инструмент."
-    elif experience_years < 2:
-        return "Отказ: Недостаточно опыта (нужно минимум 2 года)."
-    else:
-        return "Одобрено: Приглашаем на прослушивание!"
-
-# --- 2. Функция расчета стоимости репетиции для одного участника ---
-def calculate_rehearsal_cost(total_cost, participants_count, has_discount):
-    total_cost = float(total_cost)
-    participants_count = int(participants_count)
-    if participants_count <= 0:
-        return 0.0
-    
-    if has_discount:
-        final_cost = total_cost * 0.8 
-    else:
-        final_cost = total_cost
-        
-    cost_per_person = final_cost / participants_count
-    return cost_per_person
-
-# --- 3. Функция проверки пригодности репетиционного помещения ---
-def check_room_suitability(room_capacity, band_size, has_large_equipment):
-    room_capacity = int(room_capacity)
-    band_size = int(band_size)
-    # Если у группы есть крупное оборудование (например, своя барабанная установка), 
-    # оно условно занимает место еще двух человек.
-    if has_large_equipment:
-        effective_size = band_size + 2
-    else:
-        effective_size = band_size
-        
-    if effective_size > room_capacity:
-        return "Помещение слишком маленькое, ищем другое."
-    elif effective_size == room_capacity:
-        return "Помещение подходит, но будет тесновато."
-    else:
-        return "Помещение отлично подходит!"
+from bands import (
+    find_band,
+    check_band_capacity,
+    evaluate_candidate,
+)
+from rehearsals import (
+    calculate_rehearsal_cost,
+    check_room_suitability,
+    add_rehearsal,
+    is_band_available,
+    cancel_rehearsal,
+    get_rehearsal_status,
+)
+from storage import (
+    load_bands,
+    save_bands,
+    load_members,
+    save_members,
+    load_rehearsals,
+    save_rehearsals,
+)
+from utils import input_int, input_date, input_string
 
 
-# --- Основной сценарий выполнения (вывод результатов в консоль) ---
-print(f"--- Музыкальная группа: {band_name} ---")
-print(f"Дата основания: {foundation_date}")
-print(f"Сейчас ищем музыканта на инструмент: {required_instrument}")
-print("Статус группы: " + str("активна" if is_active else "на паузе") + "\n")
+def show_bands(bands: list[dict]) -> None:
+    """Вывести список групп."""
+    if not bands:
+        print('Групп пока нет.')
+        return
+    for band in bands:
+        print(f"  ID: {band['id']}, Название: {band['name']}, "
+              f"Инструмент: {band['required_instrument']}, "
+              f"Активна: {band['is_active']}")
 
-# Тестирование первой функции
-print("--- 1. Проверка кандидата ---")
-cand_instrument = "Бас-гитара"
-cand_exp = int("3")
-print(f"Кандидат играет на: {cand_instrument}, Опыт: {cand_exp} года")
-print("Вердикт:", evaluate_candidate(cand_instrument, required_instrument, cand_exp))
-print()
 
-# Тестирование второй функции
-print("--- 2. Расчет стоимости репетиции ---")
-rent_cost = float("2000.0")
-members_present = int("4")
-discount_status = True
-print(f"Общая стоимость аренды: {rent_cost} руб.")
-print(f"Пришло участников: {members_present}")
-print(f"Наличие скидки 20%: {discount_status}")
-print("С каждого участника:", calculate_rehearsal_cost(rent_cost, members_present, discount_status), "руб.")
-print()
+def show_rehearsals(rehearsals: list[dict]) -> None:
+    """Вывести список репетиций."""
+    if not rehearsals:
+        print('Репетиций пока нет.')
+        return
+    for r in rehearsals:
+        print(f"  ID: {r['id']}, Группа ID: {r['band_id']}, "
+              f"Дата: {r['rehearsal_date']}, Участники: {r['participants']}")
 
-# Тестирование третьей функции
-print("--- 3. Проверка помещения ---")
-capacity = 5
-band_members = 4
-large_eq = True
-print(f"Вместимость студии: {capacity} чел.")
-print(f"Размер группы: {band_members} чел.")
-print(f"Наличие крупного оборудования: {large_eq}")
-print("Статус:", check_room_suitability(capacity, band_members, large_eq))
+
+def main() -> None:
+    """Точка запуска приложения: меню и вызов функций."""
+    bands = load_bands('data/bands.json')
+    members = load_members('data/members.json')
+    rehearsals = load_rehearsals('data/rehearsals.json')
+
+    while True:
+        print('\n=== Система организации музыкальных групп ===')
+        print('1. Показать все группы')
+        print('2. Найти группу по названию')
+        print('3. Проверить вместимость группы')
+        print('4. Проверить доступность на дату репетиции')
+        print('5. Забронировать репетицию')
+        print('6. Отменить бронирование репетиции')
+        print('7. Показать репетиции')
+        print('8. Оценить кандидата')
+        print('9. Рассчитать стоимость репетиции')
+        print('10. Проверить пригодность помещения')
+        print('0. Выход')
+
+        choice = input_int('Выберите действие: ')
+
+        if choice == 1:
+            show_bands(bands)
+        elif choice == 2:
+            query = input_string('Введите название группы для поиска: ')
+            results = find_band(bands, query)
+            show_bands(results)
+        elif choice == 3:
+            band_id = input_int('Введите ID группы: ')
+            min_cap = input_int('Введите минимальную вместимость: ')
+            result = check_band_capacity(bands, band_id, min_cap)
+            print(f'Результат: {result}')
+        elif choice == 4:
+            band_id = input_int('Введите ID группы: ')
+            d = input_date('Введите дату (YYYY-MM-DD): ')
+            available = is_band_available(rehearsals, band_id, d.isoformat())
+            print(get_rehearsal_status(available))
+        elif choice == 5:
+            band_id = input_int('Введите ID группы: ')
+            d = input_date('Введите дату репетиции (YYYY-MM-DD): ')
+            participants = input_int('Введите количество участников: ')
+            if is_band_available(rehearsals, band_id, d.isoformat()):
+                add_rehearsal(rehearsals, band_id, d.isoformat(),
+                              participants)
+                save_rehearsals('data/rehearsals.json', rehearsals)
+                print('Репетиция успешно забронирована!')
+            else:
+                print('Группа уже занята на эту дату!')
+        elif choice == 6:
+            r_id = input_int('Введите ID репетиции для отмены: ')
+            if cancel_rehearsal(rehearsals, r_id):
+                save_rehearsals('data/rehearsals.json', rehearsals)
+                print('Репетиция отменена.')
+            else:
+                print('Репетиция с таким ID не найдена.')
+        elif choice == 7:
+            show_rehearsals(rehearsals)
+        elif choice == 8:
+            cand_instrument = input_string('Инструмент кандидата: ')
+            needed = input_string('Требуемый инструмент: ')
+            exp = input_int('Опыт в годах: ')
+            print(evaluate_candidate(cand_instrument, needed, exp))
+        elif choice == 9:
+            total = float(input('Общая стоимость аренды: '))
+            count = input_int('Количество участников: ')
+            discount = input_string('Скидка есть? (да/нет): ').lower() == 'да'
+            print(f'С каждого: '
+                  f'{calculate_rehearsal_cost(total, count, discount)} руб.')
+        elif choice == 10:
+            cap = input_int('Вместимость студии: ')
+            size = input_int('Размер группы: ')
+            large_eq = input_string(
+                'Крупное оборудование? (да/нет): ').lower() == 'да'
+            print(check_room_suitability(cap, size, large_eq))
+        elif choice == 0:
+            save_bands('data/bands.json', bands)
+            save_members('data/members.json', members)
+            save_rehearsals('data/rehearsals.json', rehearsals)
+            print('Данные сохранены. Выход.')
+            break
+        else:
+            print('Неверный выбор. Попробуйте снова.')
+
+
+if __name__ == '__main__':
+    main()

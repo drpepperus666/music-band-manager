@@ -1,0 +1,16 @@
+[
+  {
+    "id": 1,
+    "name": "Nirvana",
+    "foundation_date": "2026-06-06",
+    "required_instrument": "Бас-гитара",
+    "is_active": true
+  },
+  {
+    "id": 2,
+    "name": "The Beatles",
+    "foundation_date": "2026-01-15",
+    "required_instrument": "Гитара",
+    "is_active": true
+  }
+]
