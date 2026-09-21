@@ -2,6 +2,11 @@ from bands import (
     find_band,
     check_band_capacity,
     evaluate_candidate,
+    sort_bands,
+    filter_bands_by_active,
+    iter_active_bands,
+    get_bands_stats,
+    get_band_status,
 )
 from rehearsals import (
     calculate_rehearsal_cost,
@@ -19,7 +24,7 @@ from storage import (
     load_rehearsals,
     save_rehearsals,
 )
-from utils import input_int, input_date, input_string
+from utils import input_int, input_date, input_string, input_float
 
 
 def show_bands(bands: list[dict]) -> None:
@@ -28,9 +33,11 @@ def show_bands(bands: list[dict]) -> None:
         print('Групп пока нет.')
         return
     for band in bands:
+        members_count = len(band.get('members', []))
         print(f"  ID: {band['id']}, Название: {band['name']}, "
               f"Инструмент: {band['required_instrument']}, "
-              f"Активна: {band['is_active']}")
+              f"Участников: {members_count}, "
+              f"Статус: {get_band_status(band.get('is_active', False))}")
 
 
 def show_rehearsals(rehearsals: list[dict]) -> None:
@@ -41,6 +48,16 @@ def show_rehearsals(rehearsals: list[dict]) -> None:
     for r in rehearsals:
         print(f"  ID: {r['id']}, Группа ID: {r['band_id']}, "
               f"Дата: {r['rehearsal_date']}, Участники: {r['participants']}")
+
+
+def show_stats(bands: list[dict], rehearsals: list[dict]) -> None:
+    """Вывести статистику проекта."""
+    stats = get_bands_stats(bands, rehearsals)
+    print(f"  Всего групп: {stats['total_bands']}")
+    print(f"  Активных групп: {stats['active_bands']}")
+    print(f"  Всего репетиций: {stats['total_rehearsals']}")
+    print(f"  Среднее число участников: "
+          f"{stats['avg_participants']:.1f}")
 
 
 def main() -> None:
@@ -61,6 +78,9 @@ def main() -> None:
         print('8. Оценить кандидата')
         print('9. Рассчитать стоимость репетиции')
         print('10. Проверить пригодность помещения')
+        print('11. Показать группы отсортированные по названию')
+        print('12. Показать только активные группы')
+        print('13. Показать статистику')
         print('0. Выход')
 
         choice = input_int('Выберите действие: ')
@@ -107,7 +127,7 @@ def main() -> None:
             exp = input_int('Опыт в годах: ')
             print(evaluate_candidate(cand_instrument, needed, exp))
         elif choice == 9:
-            total = float(input('Общая стоимость аренды: '))
+            total = input_float('Общая стоимость аренды: ')
             count = input_int('Количество участников: ')
             discount = input_string('Скидка есть? (да/нет): ').lower() == 'да'
             print(f'С каждого: '
@@ -118,6 +138,15 @@ def main() -> None:
             large_eq = input_string(
                 'Крупное оборудование? (да/нет): ').lower() == 'да'
             print(check_room_suitability(cap, size, large_eq))
+        elif choice == 11:
+            show_bands(sort_bands(bands))
+        elif choice == 12:
+            active = filter_bands_by_active(bands, True)
+            print('Активные группы (через генератор):')
+            show_bands(list(iter_active_bands(bands)))
+            print(f'Всего активных: {len(active)}')
+        elif choice == 13:
+            show_stats(bands, rehearsals)
         elif choice == 0:
             save_bands('data/bands.json', bands)
             save_members('data/members.json', members)

@@ -4,13 +4,24 @@
     "name": "Nirvana",
     "foundation_date": "2026-06-06",
     "required_instrument": "Бас-гитара",
-    "is_active": true
+    "is_active": true,
+    "members": [
+      "Курт Кобейн",
+      "Крист Новоселич",
+      "Дэйв Грол"
+    ]
   },
   {
     "id": 2,
     "name": "The Beatles",
     "foundation_date": "2026-01-15",
     "required_instrument": "Гитара",
-    "is_active": true
+    "is_active": true,
+    "members": [
+      "Джон Леннон",
+      "Пол Маккартни",
+      "Джордж Харрисон",
+      "Ринго Старр"
+    ]
   }
 ]

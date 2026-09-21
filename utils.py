@@ -23,3 +23,12 @@ def input_date(prompt: str) -> date:
 def input_string(prompt: str) -> str:
     """Запросить строку у пользователя."""
     return input(prompt).strip()
+
+
+def input_float(prompt: str) -> float:
+    """Запросить у пользователя дробное число с обработкой ошибок."""
+    while True:
+        try:
+            return float(input(prompt))
+        except ValueError:
+            print('Ошибка: введите число.')

@@ -39,3 +39,10 @@ def test_cancel_rehearsal():
     add_rehearsal(rehearsals, 1, "2026-09-15", 4)
     assert cancel_rehearsal(rehearsals, 1) is True
     assert len(rehearsals) == 0
+
+
+def test_cancel_rehearsal_not_found():
+    rehearsals = []
+    add_rehearsal(rehearsals, 1, "2026-09-15", 4)
+    assert cancel_rehearsal(rehearsals, 999) is False
+    assert len(rehearsals) == 1
