@@ -1,12 +1,19 @@
 from bands import (
     find_band,
     check_band_capacity,
-    evaluate_candidate,
     sort_bands,
     filter_bands_by_active,
     iter_active_bands,
     get_bands_stats,
     get_band_status,
+)
+from members import (
+    add_member,
+    find_member,
+    filter_members_by_band,
+    sort_members,
+    count_members_for_band,
+    evaluate_candidate,
 )
 from rehearsals import (
     calculate_rehearsal_cost,
@@ -50,6 +57,18 @@ def show_rehearsals(rehearsals: list[dict]) -> None:
               f"Дата: {r['rehearsal_date']}, Участники: {r['participants']}")
 
 
+def show_members(members: list[dict]) -> None:
+    """Вывести список участников."""
+    if not members:
+        print('Участников пока нет.')
+        return
+    for m in members:
+        print(f"  ID: {m['id']}, Группа ID: {m['band_id']}, "
+              f"Инструмент: {m['instrument']}, "
+              f"Опыт: {m['experience_years']}, "
+              f"Статус: {m.get('status', '')}")
+
+
 def show_stats(bands: list[dict], rehearsals: list[dict]) -> None:
     """Вывести статистику проекта."""
     stats = get_bands_stats(bands, rehearsals)
@@ -81,6 +100,8 @@ def main() -> None:
         print('11. Показать группы отсортированные по названию')
         print('12. Показать только активные группы')
         print('13. Показать статистику')
+        print('14. Показать участников группы')
+        print('15. Добавить участника в группу')
         print('0. Выход')
 
         choice = input_int('Выберите действие: ')
@@ -147,6 +168,23 @@ def main() -> None:
             print(f'Всего активных: {len(active)}')
         elif choice == 13:
             show_stats(bands, rehearsals)
+        elif choice == 14:
+            band_id = input_int('Введите ID группы: ')
+            group_members = filter_members_by_band(members, band_id)
+            print(f'Участников в группе {band_id}: '
+                  f'{count_members_for_band(members, band_id)}')
+            show_members(sort_members(group_members))
+        elif choice == 15:
+            band_id = input_int('Введите ID группы: ')
+            instr = input_string('Инструмент участника: ')
+            exp = input_int('Опыт в годах: ')
+            new_member = add_member(members, band_id, instr, exp)
+            save_members('data/members.json', members)
+            print(f"Участник добавлен с ID {new_member['id']}")
+            query = input_string('Найти похожих по инструменту '
+                                 '(Enter - пропустить): ')
+            if query:
+                show_members(find_member(members, query))
         elif choice == 0:
             save_bands('data/bands.json', bands)
             save_members('data/members.json', members)

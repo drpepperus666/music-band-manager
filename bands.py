@@ -1,3 +1,18 @@
+from members import evaluate_candidate
+
+__all__ = [
+    'add_band',
+    'find_band',
+    'check_band_capacity',
+    'filter_bands_by_active',
+    'iter_active_bands',
+    'get_bands_stats',
+    'sort_bands',
+    'evaluate_candidate',
+    'get_band_status',
+]
+
+
 def add_band(bands: list[dict], name: str, foundation_date: str,
              required_instrument: str, is_active: bool) -> None:
     """Добавить группу в список bands."""
@@ -63,18 +78,6 @@ def get_bands_stats(bands: list[dict],
 def sort_bands(bands: list[dict], key: str = 'name') -> list[dict]:
     """Отсортировать группы по указанному ключу."""
     return sorted(bands, key=lambda b: b.get(key, ''))
-
-
-def evaluate_candidate(candidate_instrument: str, needed_instrument: str,
-                       experience_years: int) -> str:
-    """Оценить кандидата на вступление в группу (из ПР1)."""
-    experience_years = int(experience_years)
-    if candidate_instrument != needed_instrument:
-        return 'Отказ: Нам нужен другой инструмент.'
-    elif experience_years < 2:
-        return 'Отказ: Недостаточно опыта (нужно минимум 2 года).'
-    else:
-        return 'Одобрено: Приглашаем на прослушивание!'
 
 
 def get_band_status(is_available: bool) -> str:

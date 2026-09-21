@@ -21,21 +21,23 @@
 - Проверка доступности группы на дату (`is_band_available` + `get_rehearsal_status` из ПР1).
 - Бронирование (`add_rehearsal`) и отмена (`cancel_rehearsal`) репетиций.
 - Статистика: всего групп/активных/репетиций, среднее число участников (`get_bands_stats`).
-- Оценка кандидата (`evaluate_candidate` из ПР1).
+- Оценка кандидата (`evaluate_candidate` из ПР1, модуль `members`).
+- Добавление / поиск / сортировка / удаление участников (`members.py`, `lambda`, генератор).
 - Расчет стоимости репетиции (`calculate_rehearsal_cost` из ПР1).
 - Проверка помещения (`check_room_suitability` из ПР1).
 - Статус группы (`get_band_status` из ПР1).
 
 ## Структура проекта
-- `main.py` — точка запуска приложения и меню (13 пунктов + выход)
-- `bands.py` — функции управления группами (добавление, поиск, фильтрация, сортировка, генератор, статистика, оценка кандидата)
+- `main.py` — точка запуска приложения и меню (15 пунктов + выход)
+- `bands.py` — функции управления группами (добавление, поиск, фильтрация, сортировка, генератор, статистика)
+- `members.py` — функции управления участниками (сущность Member: добавление, поиск, фильтр по `band_id`, сортировка `lambda`, генератор, удаление, оценка кандидата из ПР1)
 - `rehearsals.py` — функции управления репетициями (бронирование, отмена, проверка доступности)
 - `storage.py` — загрузка и сохранение данных в JSON-файлах (`with`, обработка `FileNotFoundError`, `JSONDecodeError`)
 - `utils.py` — вспомогательные функции ввода (`input_int`, `input_float`, `input_date`, `input_string`) с обработкой ошибок
 - `data/` — JSON-файлы данных (`bands.json`, `members.json`, `rehearsals.json`)
-- `tests/` — автоматизированные тесты (`test_bands.py`, `test_rehearsals.py`, `test_storage.py`), 23 теста
+- `tests/` — автоматизированные тесты (`test_bands.py`, `test_members.py`, `test_rehearsals.py`, `test_storage.py`), 28 тестов
 - `README.md` — документация проекта
-- `requirements.txt` — зависимости проекта (`pytest`, `flake8`)
+- `requirements.txt` — зависимости проекта (`pytest`, `flake8`, `autopep8`)
 - `pytest.ini` — настройки `pytest` (`pythonpath=.`, `testpaths=tests`)
 
 ## Формат данных
@@ -79,10 +81,16 @@
 ]
 ```
 
+## Связи сущностей
+- `Member.band_id -> Band.id`: много участников к одной группе (`filter_members_by_band`, `count_members_for_band` в `members.py`).
+- `Rehearsal.band_id -> Band.id`: много репетиций к одной группе (`is_band_available`, `add_rehearsal` в `rehearsals.py`).
+- `Band + Rehearsal`: совместная статистика (`get_bands_stats` в `bands.py`).
+
 ## Требования
 - Python 3.12+
 - pytest
 - flake8
+- autopep8
 
 Установка зависимостей:
 ```
@@ -110,6 +118,18 @@ pytest
 flake8
 # через WSL:
 ./venv/bin/flake8
+```
+
+## Проверка форматирования (autopep8)
+```
+autopep8 --version
+autopep8 --diff --recursive .
+# только проверка, без изменений
+# через WSL:
+./venv/bin/autopep8 --version
+./venv/bin/autopep8 --diff --recursive .
+# автоисправление:
+./venv/bin/autopep8 --in-place --recursive bands.py members.py rehearsals.py storage.py utils.py main.py
 ```
 
 ## План развития
