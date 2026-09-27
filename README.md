@@ -148,9 +148,7 @@ pip install -r requirements.txt
 Активация окружения `venv`:
 
 ```text
-# Windows:
-venv\Scripts\activate
-# WSL (Linux):
+# WSL:
 source venv/bin/activate
 ```
 
