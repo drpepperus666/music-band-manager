@@ -3,6 +3,7 @@
     "id": 1,
     "band_id": 1,
     "rehearsal_date": "2026-09-15",
-    "participants": 4
+    "participants": 4,
+    "is_cancelled": false
   }
 ]

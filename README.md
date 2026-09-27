@@ -1,143 +1,189 @@
-# Система организации музыкальных групп
+# Система организации музыкальных групп (ПР3, ООП)
 
-Консольное приложение для управления музыкальным коллективом: учет групп, оценка кандидатов, планирование репетиций, управление бронированиями.
+Консольное приложение для управления музыкальным коллективом:
+учет групп, оценка кандидатов, планирование репетиций,
+управление бронированиями. В ПР3 проект переведен
+с функциональной модели (`list[dict]`) на объектную модель.
 
 ## Целевая аудитория
-Музыканты, лидеры и основатели музыкальных групп, а также менеджеры начинающих музыкальных коллективов.
+
+Музыканты, лидеры и основатели музыкальных групп,
+а также менеджеры начинающих музыкальных коллективов.
 
 ## Предметная область
-Музыкальная индустрия, организация репетиционного процесса и базовый менеджмент музыкальных коллективов.
 
-## Основные сущности
-- Группа (Band)
-- Участник/Кандидат (Member)
-- Репетиция (Rehearsal)
+Музыкальная индустрия, организация репетиционного процесса
+и базовый менеджмент музыкальных коллективов.
 
-## Возможности (ПР2)
-- Просмотр и поиск групп по названию (`find_band`).
-- Проверка вместимости группы по числу участников (`check_band_capacity`).
-- Сортировка групп по названию (`sort_bands`, `lambda`).
-- Фильтрация активных групп (`filter_bands_by_active`, генератор `iter_active_bands`).
-- Проверка доступности группы на дату (`is_band_available` + `get_rehearsal_status` из ПР1).
-- Бронирование (`add_rehearsal`) и отмена (`cancel_rehearsal`) репетиций.
-- Статистика: всего групп/активных/репетиций, среднее число участников (`get_bands_stats`).
-- Оценка кандидата (`evaluate_candidate` из ПР1, модуль `members`).
-- Добавление / поиск / сортировка / удаление участников (`members.py`, `lambda`, генератор).
-- Расчет стоимости репетиции (`calculate_rehearsal_cost` из ПР1).
-- Проверка помещения (`check_room_suitability` из ПР1).
-- Статус группы (`get_band_status` из ПР1).
+## Основные классы (ПР3)
+
+### Band — группа (`models/band.py`)
+
+Представляет музыкальный коллектив (аналог `Room` из примера).
+
+Атрибуты: `id`, `name`, `foundation_date`,
+`required_instrument`, `is_active`, `members`.
+
+Методы:
+
+- `is_suitable_for(min_capacity)` — проверка вместимости;
+- `validate_capacity()` — `@staticmethod` проверки корректности;
+- `from_data()` — `@classmethod` создания из JSON;
+- `to_dict()` — преобразование в JSON;
+- `__str__()` — строковое представление.
+
+### Member — участник (`models/member.py`)
+
+Представляет участника/кандидата (аналог `User` из примера).
+
+Атрибуты: `id`, `band` (ссылка на объект `Band`, не `band_id`),
+`instrument`, `experience_years`, `status`.
+
+Методы и свойства:
+
+- `band_id` — `@property`, возвращает `band.id`;
+- `from_data(data, bands)` — `@classmethod`, связывает с `Band`;
+- `to_dict()` — сохраняет `band_id` вместо объекта;
+- `__str__()` — строковое представление.
+
+### Rehearsal — репетиция (`models/rehearsal.py`)
+
+Бронирование группы на дату (аналог `Booking` из примера).
+
+Атрибуты: `id`, `band` (ссылка на `Band`),
+`rehearsal_date`, `participants`, `is_cancelled`.
+
+Методы:
+
+- `cancel()` — отмена без удаления из коллекции;
+- `band_id` — `@property`;
+- `from_data(data, bands)` / `to_dict()` — связь через `band_id`;
+- `__str__()` — с учетом статуса (активна/отменена).
+
+### Room — помещение (`models/room.py`, лайт-версия)
+
+Вспомогательный класс для проверки студии,
+без отдельного JSON-хранилища.
+
+Атрибуты: `id`, `name`, `capacity`.
+Методы: `is_suitable_for(band_size, has_large_equipment)`,
+`validate_capacity()` (`@staticmethod`), `__str__`.
+
+## Взаимодействие объектов
+
+- `Member.band -> Band`, `Rehearsal.band -> Band`
+  (композиция, как `Booking.room/user` в методичке).
+- Доступ: `rehearsal.band.name`, `member.band.name`.
+- Коллекции: `List[Band]`, `List[Member]`, `List[Rehearsal]`.
+- Активная репетиция блокирует дату;
+  отмененная (`is_cancelled=True`) — не блокирует.
+- JSON хранит только `band_id`; объекты восстанавливаются
+  в `storage.py` через поиск `find_band_by_id`.
+
+## Возможности
+
+- Просмотр и поиск групп (`find_band`, `sort_bands`).
+- Проверка вместимости через метод (`Band.is_suitable_for`).
+- Фильтрация активных (`filter_bands_by_active`,
+  генератор `iter_active_bands`).
+- Бронирование (`create_rehearsal`) и отмена
+  (`cancel_rehearsal` -> `Rehearsal.cancel()`).
+- Статистика (`get_bands_stats`).
+- Оценка кандидата (`evaluate_candidate`).
+- Участники: добавление с привязкой к объекту `Band`,
+  поиск, сортировка, удаление, подсчет.
+- Стоимость репетиции, проверка помещения (через `Room`).
+- Сценарий `create_new_rehearsal()` в `main.py`:
+  ввод ID -> поиск `Band` -> ввод даты ->
+  проверка `is_band_available` -> создание `Rehearsal`.
 
 ## Структура проекта
-- `main.py` — точка запуска приложения и меню (15 пунктов + выход)
-- `bands.py` — функции управления группами (добавление, поиск, фильтрация, сортировка, генератор, статистика)
-- `members.py` — функции управления участниками (сущность Member: добавление, поиск, фильтр по `band_id`, сортировка `lambda`, генератор, удаление, оценка кандидата из ПР1)
-- `rehearsals.py` — функции управления репетициями (бронирование, отмена, проверка доступности)
-- `storage.py` — загрузка и сохранение данных в JSON-файлах (`with`, обработка `FileNotFoundError`, `JSONDecodeError`)
-- `utils.py` — вспомогательные функции ввода (`input_int`, `input_float`, `input_date`, `input_string`) с обработкой ошибок
-- `data/` — JSON-файлы данных (`bands.json`, `members.json`, `rehearsals.json`)
-- `tests/` — автоматизированные тесты (`test_bands.py`, `test_members.py`, `test_rehearsals.py`, `test_storage.py`), 28 тестов
-- `README.md` — документация проекта
-- `requirements.txt` — зависимости проекта (`pytest`, `flake8`, `autopep8`)
-- `pytest.ini` — настройки `pytest` (`pythonpath=.`, `testpaths=tests`)
+
+- `main.py` — меню (15 пунктов + выход),
+  `create_new_rehearsal()`, работа с `List[Band/Member/Rehearsal]`
+- `models/__init__.py` — экспорт `Band, Member, Rehearsal, Room`
+- `models/band.py` — класс `Band` + функции коллекций
+- `models/member.py` — класс `Member` + функции коллекций
+- `models/rehearsal.py` — класс `Rehearsal` + бронирование
+- `models/room.py` — класс `Room` (лайт)
+- `storage.py` — JSON <-> объекты (`with`,
+  `FileNotFoundError`, `JSONDecodeError`)
+- `utils.py` — ввод (`input_int`, `input_float`,
+  `input_date`, `input_string`)
+- `data/` — `bands.json`, `members.json`, `rehearsals.json`
+  (репетиции хранят `is_cancelled`)
+- `tests/` — 47 тестов: `test_bands.py`, `test_members.py`,
+  `test_rehearsals.py`, `test_storage.py`, `test_room.py`
+- `pytest.ini`, `requirements.txt`, `.flake8`
 
 ## Формат данных
 
-`data/bands.json` — список групп:
-```json
-[
-  {
-    "id": 1,
-    "name": "Nirvana",
-    "foundation_date": "2026-06-06",
-    "required_instrument": "Бас-гитара",
-    "is_active": true,
-    "members": ["Курт Кобейн", "Крист Новоселич", "Дэйв Грол"]
-  }
-]
-```
+`data/bands.json` — список групп (без изменений ПР2).
 
-`data/rehearsals.json` — список репетиций:
+`data/members.json` — `band_id` для связи с группой.
+
+`data/rehearsals.json` — связь через `band_id` + флаг:
+
 ```json
 [
   {
     "id": 1,
     "band_id": 1,
     "rehearsal_date": "2026-09-15",
-    "participants": 4
+    "participants": 4,
+    "is_cancelled": false
   }
 ]
 ```
-
-`data/members.json` — список кандидатов:
-```json
-[
-  {
-    "id": 1,
-    "band_id": 1,
-    "instrument": "Бас-гитара",
-    "experience_years": 3,
-    "status": "Одобрено: Приглашаем на прослушивание!"
-  }
-]
-```
-
-## Связи сущностей
-- `Member.band_id -> Band.id`: много участников к одной группе (`filter_members_by_band`, `count_members_for_band` в `members.py`).
-- `Rehearsal.band_id -> Band.id`: много репетиций к одной группе (`is_band_available`, `add_rehearsal` в `rehearsals.py`).
-- `Band + Rehearsal`: совместная статистика (`get_bands_stats` в `bands.py`).
 
 ## Требования
-- Python 3.12+
-- pytest
-- flake8
-- autopep8
 
-Установка зависимостей:
-```
+- Python 3.12+
+- pytest, flake8, autopep8
+
+Установка:
+
+```text
 pip install -r requirements.txt
 ```
-Примечание: виртуальное окружение `venv/` создано в WSL (Linux), поэтому команды запуска выполняются через WSL (`wsl ./venv/bin/...`).
+
+Примечание: `venv/` создано в WSL,
+команды запускаются через `wsl ./venv/bin/...`.
 
 ## Запуск программы
-```
+
+```text
 python main.py
 # через WSL:
-source venv/bin/activate
-./venv/bin/python main.py
+wsl ./venv/bin/python main.py
 ```
 
 ## Запуск тестов
-```
-pytest
+
+```text
+pytest -v
 # через WSL:
-./venv/bin/pytest -v
+wsl ./venv/bin/pytest -v
 ```
+
+Тесты проверяют: создание объектов и атрибуты, `__str__`,
+методы (`is_suitable_for`, `cancel`), связь
+`Rehearsal.band is Band`, правило «второе активное
+бронирование запрещено, после отмены — разрешено»,
+`from_data/to_dict`, коллекции, `storage` roundtrip.
 
 ## Проверка качества кода
-```
-flake8
-# через WSL:
-./venv/bin/flake8
-```
 
-## Проверка форматирования (autopep8)
-```
-autopep8 --version
-autopep8 --diff --recursive .
-# только проверка, без изменений
+```text
+flake8 .
 # через WSL:
-./venv/bin/autopep8 --version
-./venv/bin/autopep8 --diff --recursive .
-# автоисправление:
-./venv/bin/autopep8 --in-place --recursive bands.py members.py rehearsals.py storage.py utils.py main.py
+wsl ./venv/bin/python -m flake8 .
 ```
 
 ## План развития
-На следующих этапах планируется:
-- разработка веб-приложения;
-- подключение базы данных;
-- реализация пользователей;
-- разработка API;
-- контейнеризация приложения;
-- настройка CI/CD;
-- переход на ООП (ПР3).
+
+- веб-приложение;
+- база данных;
+- пользователи и API;
+- контейнеризация;
+- CI/CD.
