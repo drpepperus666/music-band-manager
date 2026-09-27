@@ -48,7 +48,7 @@ class Room:
         return f"{self.name}, вместимость: {self.capacity} чел."
 
 
-def find_room_by_id(rooms: list, room_id: int) -> Optional[Room]:
+def find_room_by_id(rooms: list["Room"], room_id: int) -> Optional[Room]:
     """Найти помещение по идентификатору."""
     for room in rooms:
         if room.id == int(room_id):

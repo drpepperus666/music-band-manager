@@ -109,7 +109,7 @@ def _band_key(band: Union[Band, int]) -> Optional[int]:
 
 
 def is_band_available(
-    rehearsals: list,
+    rehearsals: list["Rehearsal"],
     band: Union[Band, int],
     rehearsal_date: str,
 ) -> bool:
@@ -124,9 +124,9 @@ def is_band_available(
 
 
 def create_rehearsal(
-    rehearsals: list,
+    rehearsals: list["Rehearsal"],
     band: Union[Band, int],
-    bands: Optional[list] = None,
+    bands: Optional[list["Band"]] = None,
     rehearsal_date: str = "",
     participants: int = 0,
 ) -> Optional[Rehearsal]:
@@ -153,11 +153,11 @@ def create_rehearsal(
 
 
 def add_rehearsal(
-    rehearsals: list,
+    rehearsals: list["Rehearsal"],
     band: Union[Band, int],
     rehearsal_date: str = "",
     participants: int = 0,
-    bands: Optional[list] = None,
+    bands: Optional[list["Band"]] = None,
 ) -> Optional[Rehearsal]:
     """Добавить репетицию (совместимая обертка над create_rehearsal)."""
     if isinstance(band, Band):
@@ -169,7 +169,7 @@ def add_rehearsal(
     )
 
 
-def cancel_rehearsal(rehearsals: list, rehearsal_id: int) -> bool:
+def cancel_rehearsal(rehearsals: list["Rehearsal"], rehearsal_id: int) -> bool:
     """Отменить репетицию через метод объекта (без удаления)."""
     for r in rehearsals:
         if r.id == int(rehearsal_id):
@@ -179,7 +179,7 @@ def cancel_rehearsal(rehearsals: list, rehearsal_id: int) -> bool:
 
 
 def find_rehearsal_by_id(
-    rehearsals: list,
+    rehearsals: list["Rehearsal"],
     rehearsal_id: int,
 ) -> Optional[Rehearsal]:
     """Найти репетицию по идентификатору."""
@@ -196,7 +196,7 @@ def get_rehearsal_status(is_available: bool) -> str:
     return "Репетиция уже занята"
 
 
-def show_rehearsals(rehearsals: list) -> None:
+def show_rehearsals(rehearsals: list["Rehearsal"]) -> None:
     """Вывести список репетиций через __str__."""
     if not rehearsals:
         print("Репетиций пока нет.")

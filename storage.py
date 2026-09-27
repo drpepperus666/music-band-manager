@@ -8,7 +8,7 @@ from models.member import Member
 from models.rehearsal import Rehearsal
 
 
-def _load_json(filename: str):
+def _load_json(filename: str) -> list:
     """Загрузить сырой JSON-список, вернуть [] при ошибках."""
     try:
         with open(filename, "r", encoding="utf-8") as f:
@@ -26,28 +26,32 @@ def _save_json(filename: str, data: list) -> None:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
 
-def load_bands(filename: str) -> list:
+def load_bands(filename: str) -> list[Band]:
     """Загрузить группы из JSON как объекты Band."""
     return [Band.from_data(item) for item in _load_json(filename)]
 
 
-def save_bands(filename: str, bands: list) -> None:
+def save_bands(filename: str, bands: list[Band]) -> None:
     """Сохранить объекты Band в JSON."""
     _save_json(filename, [b.to_dict() for b in bands])
 
 
-def load_members(filename: str, bands: Optional[list] = None) -> list:
+def load_members(
+    filename: str, bands: Optional[list[Band]] = None
+) -> list[Member]:
     """Загрузить участников, связав с объектами Band."""
     bands = bands if bands is not None else []
     return [Member.from_data(item, bands) for item in _load_json(filename)]
 
 
-def save_members(filename: str, members: list) -> None:
+def save_members(filename: str, members: list[Member]) -> None:
     """Сохранить объекты Member в JSON (band -> band_id)."""
     _save_json(filename, [m.to_dict() for m in members])
 
 
-def load_rehearsals(filename: str, bands: Optional[list] = None) -> list:
+def load_rehearsals(
+    filename: str, bands: Optional[list[Band]] = None
+) -> list[Rehearsal]:
     """Загрузить репетиции, связав с объектами Band."""
     bands = bands if bands is not None else []
     result = []
@@ -58,6 +62,6 @@ def load_rehearsals(filename: str, bands: Optional[list] = None) -> list:
     return result
 
 
-def save_rehearsals(filename: str, rehearsals: list) -> None:
+def save_rehearsals(filename: str, rehearsals: list[Rehearsal]) -> None:
     """Сохранить объекты Rehearsal в JSON (band -> band_id)."""
     _save_json(filename, [r.to_dict() for r in rehearsals])

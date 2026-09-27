@@ -29,7 +29,7 @@ class Member:
         return self.band.id if self.band is not None else None
 
     @classmethod
-    def from_data(cls, data: dict, bands: list) -> "Member":
+    def from_data(cls, data: dict, bands: list["Band"]) -> "Member":
         """Создать участника из словаря, связав с объектом Band."""
         band = find_band_by_id(bands, data.get("band_id"))
         return cls(
@@ -75,8 +75,8 @@ def evaluate_candidate(
 
 
 def add_member(
-    members: list,
-    bands: list,
+    members: list["Member"],
+    bands: list["Band"],
     band_id: int,
     instrument: str,
     experience_years: int,
@@ -94,12 +94,14 @@ def add_member(
     return member
 
 
-def find_member(members: list, query: str) -> list:
+def find_member(members: list["Member"], query: str) -> list["Member"]:
     """Найти участников по подстроке названия инструмента."""
     return [m for m in members if query.lower() in m.instrument.lower()]
 
 
-def find_member_by_id(members: list, member_id: int) -> Optional[Member]:
+def find_member_by_id(
+    members: list["Member"], member_id: int
+) -> Optional[Member]:
     """Найти участника по идентификатору."""
     for member in members:
         if member.id == int(member_id):
@@ -107,24 +109,30 @@ def find_member_by_id(members: list, member_id: int) -> Optional[Member]:
     return None
 
 
-def filter_members_by_band(members: list, band_id: int) -> list:
+def filter_members_by_band(
+    members: list["Member"], band_id: int
+) -> list["Member"]:
     """Отобрать участников одной группы."""
     return [m for m in members if m.band_id == int(band_id)]
 
 
-def iter_members_by_band(members: list, band_id: int) -> Iterator[Member]:
+def iter_members_by_band(
+    members: list["Member"], band_id: int
+) -> Iterator[Member]:
     """Генератор участников одной группы."""
     for member in members:
         if member.band_id == int(band_id):
             yield member
 
 
-def sort_members(members: list, key: str = "experience_years") -> list:
+def sort_members(
+    members: list["Member"], key: str = "experience_years"
+) -> list["Member"]:
     """Отсортировать участников по атрибуту (через lambda)."""
     return sorted(members, key=lambda m: getattr(m, key, ""))
 
 
-def remove_member(members: list, member_id: int) -> bool:
+def remove_member(members: list["Member"], member_id: int) -> bool:
     """Удалить участника по id. True, если найден и удален."""
     for i, member in enumerate(members):
         if member.id == int(member_id):
@@ -133,7 +141,7 @@ def remove_member(members: list, member_id: int) -> bool:
     return False
 
 
-def count_members_for_band(members: list, band_id: int) -> int:
+def count_members_for_band(members: list["Member"], band_id: int) -> int:
     """Посчитать число участников группы (связь Member -> Band)."""
     count = 0
     for member in members:
@@ -142,7 +150,7 @@ def count_members_for_band(members: list, band_id: int) -> int:
     return count
 
 
-def show_members(members: list) -> None:
+def show_members(members: list["Member"]) -> None:
     """Вывести список участников через __str__."""
     if not members:
         print("Участников пока нет.")

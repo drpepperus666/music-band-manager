@@ -68,7 +68,7 @@ class Band:
 
 
 def add_band(
-    bands: list,
+    bands: list["Band"],
     name: str,
     foundation_date: str,
     required_instrument: str,
@@ -88,12 +88,12 @@ def add_band(
     return band
 
 
-def find_band(bands: list, query: str) -> list:
+def find_band(bands: list["Band"], query: str) -> list["Band"]:
     """Найти группы по подстроке названия."""
     return [b for b in bands if query.lower() in b.name.lower()]
 
 
-def find_band_by_id(bands: list, band_id: int) -> Optional[Band]:
+def find_band_by_id(bands: list["Band"], band_id: int) -> Optional[Band]:
     """Найти группу по идентификатору."""
     for band in bands:
         if band.id == int(band_id):
@@ -102,7 +102,7 @@ def find_band_by_id(bands: list, band_id: int) -> Optional[Band]:
 
 
 def check_band_capacity(
-    bands: list,
+    bands: list["Band"],
     band_id: int,
     min_capacity: int,
 ) -> bool:
@@ -113,19 +113,21 @@ def check_band_capacity(
     return band.is_suitable_for(min_capacity)
 
 
-def filter_bands_by_active(bands: list, active: bool = True) -> list:
+def filter_bands_by_active(
+    bands: list["Band"], active: bool = True
+) -> list["Band"]:
     """Отобрать группы по статусу активности."""
     return [b for b in bands if b.is_active == active]
 
 
-def iter_active_bands(bands: list) -> Iterator[Band]:
+def iter_active_bands(bands: list["Band"]) -> Iterator[Band]:
     """Генератор активных групп."""
     for band in bands:
         if band.is_active:
             yield band
 
 
-def get_bands_stats(bands: list, rehearsals: "list[Rehearsal]") -> dict:
+def get_bands_stats(bands: list["Band"], rehearsals: "list[Rehearsal]") -> dict:
     """Посчитать статистику по группам и репетициям."""
     total_bands = len(bands)
     active_bands = sum(1 for b in bands if b.is_active)
@@ -143,7 +145,7 @@ def get_bands_stats(bands: list, rehearsals: "list[Rehearsal]") -> dict:
     }
 
 
-def sort_bands(bands: list, key: str = "name") -> list:
+def sort_bands(bands: list["Band"], key: str = "name") -> list["Band"]:
     """Отсортировать группы по атрибуту."""
     return sorted(bands, key=lambda b: getattr(b, key, ""))
 
@@ -155,7 +157,7 @@ def get_band_status(is_active: bool) -> str:
     return "Группа уже занята"
 
 
-def show_bands(bands: list) -> None:
+def show_bands(bands: list["Band"]) -> None:
     """Вывести список групп через __str__."""
     if not bands:
         print("Групп пока нет.")
