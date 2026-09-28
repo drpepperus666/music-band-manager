@@ -18,7 +18,7 @@
 
 ### Band — группа (`models/band.py`)
 
-Представляет музыкальный коллектив (аналог `Room` из примера).
+Представляет музыкальный коллектив.
 
 Атрибуты: `id`, `name`, `foundation_date`,
 `required_instrument`, `is_active`, `members`.
