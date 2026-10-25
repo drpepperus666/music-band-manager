@@ -1,0 +1,9 @@
+{% if rehearsal.is_cancelled %}
+ <span class="badge bg-secondary rehearsal-status rehearsal-status-cancelled">
+ Отменена
+ </span>
+{% else %}
+ <span class="badge bg-success rehearsal-status rehearsal-status-active">
+ Активна
+ </span>
+{% endif %}

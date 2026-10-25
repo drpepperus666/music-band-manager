@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}
+ {% if band %}
+ {{ band.name }} – Bandly
+ {% else %}
+ Группа не найдена – Bandly
+ {% endif %}
+{% endblock %}
+{% block content %}
+ {% if band %}
+ <div class="card">
+ <div class="card-body">
+ <h1 class="card-title">
+ {{ band.name|default:"Без названия" }}
+ </h1>
+ <p class="card-text">
+ <strong>ID:</strong> {{ band.id }}
+ </p>
+ <p class="card-text">
+ <strong>Основана:</strong> {{ band.foundation_date }}
+ </p>
+ <p class="card-text">
+ <strong>Инструмент:</strong> {{ band.required_instrument }}
+ </p>
+ <p class="card-text">
+ <strong>Статус:</strong>
+ {% if band.is_active %}
+ Активна
+ {% else %}
+ Неактивна
+ {% endif %}
+ </p>
+ <p class="card-text">
+ <strong>Участников:</strong> {{ members_count }}
+ </p>
+ <p class="card-text">
+ Доступность на текущую дату:
+ {% if available %}
+ <span class="badge bg-success">
+ свободна
+ </span>
+ {% else %}
+ <span class="badge bg-danger">
+ занята
+ </span>
+ {% endif %}
+ </p>
+ </div>
+ </div>
+ {% else %}
+ <h1 class="text-danger">
+ Группа не найдена
+ </h1>
+ <p>
+ Группа с указанным идентификатором отсутствует.
+ </p>
+ {% endif %}
+ <a
+ href="{% url 'bands:list' %}"
+ class="btn btn-outline-secondary mt-3"
+ >
+ ← к списку групп
+ </a>
+{% endblock %}

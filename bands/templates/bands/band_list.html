@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}
+ Группы – Bandly
+{% endblock %}
+{% block content %}
+ <h1>Группы</h1>
+ <p>
+ Всего групп: {{ bands|length }}
+ </p>
+ <ul class="list-group">
+ {% for band in bands %}
+ <li class="list-group-item">
+ {% include "bands/includes/band_card.html" %}
+ </li>
+ {% empty %}
+ <li class="list-group-item">
+ Группы не найдены.
+ </li>
+ {% endfor %}
+ </ul>
+{% endblock %}

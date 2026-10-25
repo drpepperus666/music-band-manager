@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}
+ Главная – Bandly
+{% endblock %}
+{% block content %}
+ <h1 class="display-4">Bandly</h1>
+ <p class="lead">
+ Система организации музыкальных групп.
+ </p>
+ <p>Основные разделы:</p>
+ <a href="{% url 'bands:list' %}" class="btn btn-primary me-2">
+ Группы
+ </a>
+ <a href="{% url 'rehearsals:list' %}" class="btn btn-secondary">
+ Репетиции
+ </a>
+{% endblock %}

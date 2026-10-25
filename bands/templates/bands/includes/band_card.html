@@ -1,0 +1,23 @@
+<article class="card band-card mb-3">
+ <div class="card-body">
+ <h2 class="card-title">
+ {{ band.name|default:"Без названия" }}
+ </h2>
+ <p class="card-text">
+ Инструмент: {{ band.required_instrument|default:"—" }}
+ </p>
+ <p class="card-text">
+ {% if band.is_active %}
+ Активна
+ {% else %}
+ Неактивна
+ {% endif %}
+ </p>
+ <a
+ href="{% url 'bands:detail' band.id %}"
+ class="btn btn-primary"
+ >
+ Подробнее
+ </a>
+ </div>
+</article>

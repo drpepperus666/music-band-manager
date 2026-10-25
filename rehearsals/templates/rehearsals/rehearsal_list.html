@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}
+ Репетиции – Bandly
+{% endblock %}
+{% block content %}
+ <h1>Репетиции</h1>
+ <p>
+ Всего репетиций: {{ rehearsals|length }}
+ </p>
+ <ul class="list-group">
+ {% for rehearsal in rehearsals %}
+ <li class="list-group-item d-flex justify-content-between">
+ <a href="{% url 'rehearsals:detail' rehearsal.id %}">
+ {{ rehearsal.band.name }} – {{ rehearsal.rehearsal_date }}
+ </a>
+ {% include "rehearsals/includes/rehearsal_status.html" %}
+ </li>
+ {% empty %}
+ <li class="list-group-item">
+ Репетиции не найдены.
+ </li>
+ {% endfor %}
+ </ul>
+{% endblock %}

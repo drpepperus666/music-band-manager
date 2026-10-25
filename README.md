@@ -1,4 +1,4 @@
-# Система организации музыкальных групп (ПР3 ООП + ПР5 Django)
+# Система организации музыкальных групп (ПР3 ООП + ПР5 Django + ПР6 шаблоны)
 
 Консольное приложение для управления музыкальным коллективом:
 учет групп, оценка кандидатов, планирование репетиций,
@@ -175,22 +175,54 @@ wsl ./venv/bin/python manage.py runserver
 http://127.0.0.1:8000/
 ```
 
-## Страницы веб-интерфейса (ПР5)
+## Страницы веб-интерфейса (ПР5–ПР6)
 
 - `/` — главная страница: описание приложения и навигация
-  (view-функция `index()`);
+  (view-функция `index()`, шаблон `homepage/index.html`);
 - `/bands/` — список групп: объекты `Band` из `data/bands.json`
-  (view-функция `bands()`);
+  (view-функция `band_list()`, шаблон `bands/band_list.html`);
 - `/bands/<int:band_id>/` — страница группы, доступность на текущую
-  дату через `is_band_available()` (view-функция `band_detail()`);
+  дату через `is_band_available()`
+  (view-функция `band_detail()`, шаблон `bands/band_detail.html`);
 - `/rehearsals/` — список репетиций: объекты `Rehearsal`
-  из `data/rehearsals.json` (view-функция `rehearsals()`);
+  из `data/rehearsals.json`
+  (view-функция `rehearsal_list()`,
+  шаблон `rehearsals/rehearsal_list.html`);
 - `/rehearsals/<int:rehearsal_id>/` — страница репетиции
-  (view-функция `rehearsal_detail()`).
+  (view-функция `rehearsal_detail()`,
+  шаблон `rehearsals/rehearsal_detail.html`).
 
 Если группа или репетиция с указанным идентификатором не найдена,
 страница возвращает код статуса 404. Несуществующие адреса
-обрабатывает `handler404` (`homepage.views.page_not_found`).
+обрабатывает `handler404` (`homepage.views.page_not_found`,
+шаблон `homepage/404.html`).
+
+## Django-шаблоны (ПР6)
+
+HTML вынесен из Python-кода в шаблоны, функция `page()` удалена,
+представления используют `render(request, template, context)`:
+
+- базовый шаблон `templates/base.html`: структура документа,
+  Bootstrap 5.3 через CDN, собственный CSS, логотип, навигация,
+  блоки `title`/`content`, подвал с годом через `main.js`;
+- навигация `templates/includes/navigation.html` подключена через
+  `{% include %}`, ссылки через `{% url %}`
+  (`homepage:index`, `bands:list`, `bands:detail`,
+  `rehearsals:list`, `rehearsals:detail`);
+- пространства имен: `app_name` в `homepage/urls.py`,
+  `bands/urls.py`, `rehearsals/urls.py`;
+- карточка группы `bands/includes/band_card.html`,
+  статус репетиции `rehearsals/includes/rehearsal_status.html`
+  подключены через `{% include %}`;
+- списки — цикл `{% for %}` с `{% empty %}`,
+  состояния — `{% if %}` (`is_active`, `is_cancelled`,
+  `available`, наличие объекта);
+- фильтры: `{{ bands|length }}`, `{{ rehearsals|length }}`,
+  `{{ band.name|default:"Без названия" }}`;
+- статика `homepage/static/homepage/`: `css/style.css`
+  (стили `.band-card`, `.rehearsal-status`, `.bandly-logo`),
+  `js/main.js` (текущий год в подвале), `img/logo.png`;
+  подключение через `{% load static %}` и `{% static %}`.
 
 ## Структура Django-проекта (ПР5)
 
@@ -198,28 +230,32 @@ http://127.0.0.1:8000/
 .
 ├── manage.py
 ├── bandly/            # конфигурация Django-проекта
-│   ├── settings.py    # LANGUAGE_CODE ru-RU, TIME_ZONE Europe/Moscow
+│   ├── settings.py    # ru-RU, Europe/Moscow, DIRS templates/
 │   ├── urls.py        # include() трех приложений + handler404
 │   ├── asgi.py
 │   └── wsgi.py
-├── homepage/          # главная страница + page()
-│   ├── views.py       # page(), index(), page_not_found()
-│   └── urls.py
+├── templates/         # base.html + includes/navigation.html (ПР6)
+├── homepage/          # главная страница
+│   ├── views.py       # index(), page_not_found() через render()
+│   ├── urls.py        # app_name homepage, name index
+│   ├── templates/homepage/  # index.html, 404.html
+│   └── static/homepage/     # css/style.css, js/main.js, img/logo.png
 ├── bands/             # группы
-│   ├── views.py       # bands(), band_detail()
-│   └── urls.py
+│   ├── views.py       # band_list(), band_detail() через render()
+│   ├── urls.py        # app_name bands, names list/detail
+│   └── templates/bands/     # band_list/detail + includes/band_card
 ├── rehearsals/        # репетиции
-│   ├── views.py       # rehearsals(), rehearsal_detail()
-│   └── urls.py
+│   ├── views.py       # rehearsal_list/detail через render()
+│   ├── urls.py        # app_name rehearsals, names list/detail
+│   └── templates/rehearsals/  # list/detail + includes/status
 ├── models/            # классы ПР3 (Band, Member, Rehearsal, Room)
 ├── data/              # bands.json, members.json, rehearsals.json
 └── tests/             # 47 тестов ПР3
 ```
 
-HTML формируется в Python через вспомогательную функцию `page()`
-в `homepage/views.py`: единый каркас (кодировка, viewport,
-Bootstrap 5.3 через CDN, навигация, `container`). В следующей работе
-каркас переедет в базовый шаблон, `page()` будет удалена.
+Генерация HTML через функцию `page()` (ПР5) удалена в ПР6:
+представления готовят контекст и вызывают `render()`,
+разметка хранится в шаблонах.
 
 ## Запуск тестов
 
@@ -254,28 +290,34 @@ wsl ./venv/bin/python -m flake8 .
 ```text
 git status
 git add .
-git commit -m "PR5: add Django project and web pages"
+git commit -m "PR6: add Django templates and static files"
 ```
 
-## Текущее состояние и план развития (ПР5)
+## Текущее состояние и план развития (ПР6)
 
 Реализовано:
 
 - Django-проект `bandly` и три приложения
   (`homepage`, `bands`, `rehearsals`);
-- маршрутизация URL двух уровней (`include()`);
-- view-функции и страницы (главная, списки, детальные);
+- маршрутизация URL двух уровней (`include()`),
+  именованные маршруты и пространства имен;
+- view-функции через `render()` и страницы-шаблоны
+  (главная, списки, детальные, 404);
+- базовый шаблон `base.html` (`extends`/`block`),
+  включаемые шаблоны (`include`: навигация, карточка группы,
+  статус репетиции);
+- контекст, циклы `{% for %}` с `{% empty %}`, условия `{% if %}`;
+- фильтры `length`, `default`;
+- собственные статические файлы (CSS, JS, логотип) + Bootstrap 5.3;
 - динамические URL `<int:band_id>`, `<int:rehearsal_id>`;
 - обработка 404 (ветка «не найдено» + `handler404`);
 - отображение данных предметной области из JSON через логику ПР3
   (`load_bands`, `find_band_by_id`, `is_band_available`,
   `find_rehearsal_by_id`, подсчет участников);
-- навигация между страницами;
-- оформление Bootstrap 5.3.
+- навигация между страницами через `{% url %}`.
 
 Планируется:
 
-- переход на Django-шаблоны и отказ от функции `page()`;
 - база данных SQLite и SQL-запросы;
 - перенос сущностей в Django ORM;
 - формы создания и редактирования;
