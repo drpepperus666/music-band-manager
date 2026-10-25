@@ -7,6 +7,11 @@
  <p>
  Всего групп: {{ bands|length }}
  </p>
+ <p>
+ <a href="{% url 'bands:available' %}">
+ Найти свободную группу
+ </a>
+ </p>
  <ul class="list-group">
  {% for band in bands %}
  <li class="list-group-item">

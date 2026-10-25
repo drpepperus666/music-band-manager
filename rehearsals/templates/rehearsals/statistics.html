@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}
+ Статистика репетиций – Bandly
+{% endblock %}
+{% block content %}
+ <h1>Статистика репетиций</h1>
+ {% for item in statistics %}
+ <article class="statistics-item">
+ <h2>{{ item.band_name }}</h2>
+ <p>Количество репетиций: {{ item.rehearsals_count }}</p>
+ </article>
+ {% empty %}
+ <p>Данные отсутствуют.</p>
+ {% endfor %}
+{% endblock %}

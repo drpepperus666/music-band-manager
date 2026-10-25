@@ -1,4 +1,4 @@
-# Система организации музыкальных групп (ПР3 ООП + ПР5 Django + ПР6 шаблоны)
+# Система организации музыкальных групп (ПР3 ООП + ПР5 Django + ПР6 шаблоны + ПР7 SQLite)
 
 Консольное приложение для управления музыкальным коллективом:
 учет групп, оценка кандидатов, планирование репетиций,
@@ -175,22 +175,29 @@ wsl ./venv/bin/python manage.py runserver
 http://127.0.0.1:8000/
 ```
 
-## Страницы веб-интерфейса (ПР5–ПР6)
+## Страницы веб-интерфейса (ПР5–ПР7)
 
 - `/` — главная страница: описание приложения и навигация
   (view-функция `index()`, шаблон `homepage/index.html`);
-- `/bands/` — список групп: объекты `Band` из `data/bands.json`
+- `/bands/` — список групп из SQLite
   (view-функция `band_list()`, шаблон `bands/band_list.html`);
-- `/bands/<int:band_id>/` — страница группы, доступность на текущую
-  дату через `is_band_available()`
+- `/bands/<int:band_id>/` — страница группы из SQLite, доступность
+  на текущую дату SQL-запросом
   (view-функция `band_detail()`, шаблон `bands/band_detail.html`);
-- `/rehearsals/` — список репетиций: объекты `Rehearsal`
-  из `data/rehearsals.json`
+- `/bands/available/?date=YYYY-MM-DD` — поиск свободных групп
+  на дату, форма GET + параметризованный запрос с `NOT IN`
+  (view-функция `available_bands()`,
+  шаблон `bands/available.html`);
+- `/rehearsals/` — список активных репетиций из SQLite (`JOIN`)
   (view-функция `rehearsal_list()`,
   шаблон `rehearsals/rehearsal_list.html`);
-- `/rehearsals/<int:rehearsal_id>/` — страница репетиции
+- `/rehearsals/<int:rehearsal_id>/` — страница репетиции из SQLite
   (view-функция `rehearsal_detail()`,
-  шаблон `rehearsals/rehearsal_detail.html`).
+  шаблон `rehearsals/rehearsal_detail.html`);
+- `/rehearsals/statistics/` — статистика: число репетиций
+  по группам (`LEFT JOIN` + `GROUP BY`)
+  (view-функция `statistics()`,
+  шаблон `rehearsals/statistics.html`).
 
 Если группа или репетиция с указанным идентификатором не найдена,
 страница возвращает код статуса 404. Несуществующие адреса
@@ -249,13 +256,47 @@ HTML вынесен из Python-кода в шаблоны, функция `page
 │   ├── urls.py        # app_name rehearsals, names list/detail
 │   └── templates/rehearsals/  # list/detail + includes/status
 ├── models/            # классы ПР3 (Band, Member, Rehearsal, Room)
-├── data/              # bands.json, members.json, rehearsals.json
+├── db/                # SQLite-слой ПР7: database.py, import_json.py
+├── sql/               # schema.sql, queries.sql (12 запросов) (ПР7)
+├── data/              # JSON ПР3 + bands.sqlite (ПР7)
 └── tests/             # 47 тестов ПР3
 ```
 
 Генерация HTML через функцию `page()` (ПР5) удалена в ПР6:
 представления готовят контекст и вызывают `render()`,
 разметка хранится в шаблонах.
+
+## База данных SQLite (ПР7)
+
+Файл `data/bands.sqlite` создается из JSON:
+
+```text
+wsl ./venv/bin/python -m db.import_json
+```
+
+Схема `sql/schema.sql`:
+
+- `bands(id, name, foundation_date, required_instrument, is_active)`
+  — `id INTEGER PRIMARY KEY`, флаги хранятся как `0/1`;
+- `members(id, band_id, instrument, experience_years, status)` —
+  `band_id FOREIGN KEY REFERENCES bands(id)`;
+- `rehearsals(id, band_id, rehearsal_date, participants,
+  is_cancelled)` — `band_id FOREIGN KEY REFERENCES bands(id)`,
+  дата строкой `YYYY-MM-DD`, отмена флагом `0/1`.
+
+Подключение `db/database.py`: `get_connection()` —
+`sqlite3.connect`, `PRAGMA foreign_keys = ON`,
+`row_factory = sqlite3.Row` (доступ к полям по именам
+в Python и в шаблонах). Импорт `db/import_json.py`:
+`executemany()`, параметры `?`, `commit()`/`rollback()`.
+
+Файл `sql/queries.sql` — 12 проверенных запросов (все виды
+представлены минимум дважды): списки (`ORDER BY`),
+фильтрация (`WHERE`, `LIKE`), соединения (`JOIN`, `LEFT JOIN`),
+агрегаты (`COUNT`, `AVG`), группировки (`GROUP BY`),
+фильтрация групп (`HAVING`), подзапрос свободных групп
+(`NOT IN`). Значения передаются только параметрами `?`,
+конкатенация строк и f-строки для SQL запрещены.
 
 ## Запуск тестов
 
@@ -290,10 +331,10 @@ wsl ./venv/bin/python -m flake8 .
 ```text
 git status
 git add .
-git commit -m "PR6: add Django templates and static files"
+git commit -m "PR7: add SQLite database and SQL queries"
 ```
 
-## Текущее состояние и план развития (ПР6)
+## Текущее состояние и план развития (ПР7)
 
 Реализовано:
 
@@ -314,11 +355,18 @@ git commit -m "PR6: add Django templates and static files"
 - отображение данных предметной области из JSON через логику ПР3
   (`load_bands`, `find_band_by_id`, `is_band_available`,
   `find_rehearsal_by_id`, подсчет участников);
-- навигация между страницами через `{% url %}`.
+- навигация между страницами через `{% url %}`
+  (Главная, Группы, Репетиции, Статистика);
+- слой SQLite: `data/bands.sqlite`, `sql/schema.sql`,
+  `db/database.py`, `db/import_json.py`, 12 запросов
+  в `sql/queries.sql` (списки, `WHERE`, `JOIN`, `COUNT`/`AVG`,
+  `GROUP BY`, `HAVING`, подзапрос `NOT IN`);
+- страницы на данных из SQLite: список групп, список репетиций,
+  поиск свободных групп по дате (параметризованный запрос),
+  статистика по группам; `sqlite3.Row` + `context` + шаблоны.
 
 Планируется:
 
-- база данных SQLite и SQL-запросы;
 - перенос сущностей в Django ORM;
 - формы создания и редактирования;
 - пользователи и API;

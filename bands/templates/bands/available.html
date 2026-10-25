@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}
+ Свободные группы – Bandly
+{% endblock %}
+{% block content %}
+ <h1>Свободные группы</h1>
+ <form method="get">
+ <label for="date">Дата:</label>
+ <input
+ type="date"
+ id="date"
+ name="date"
+ value="{{ booking_date }}"
+ >
+ <button type="submit">Найти</button>
+ </form>
+ {% if booking_date %}
+ <h2>Дата: {{ booking_date }}</h2>
+ {% for band in bands %}
+ <article class="card band-card mb-3">
+ <div class="card-body">
+ <h3>{{ band.name }}</h3>
+ <p>Инструмент: {{ band.required_instrument }}</p>
+ </div>
+ </article>
+ {% empty %}
+ <p>На выбранную дату свободных групп нет.</p>
+ {% endfor %}
+ {% endif %}
+{% endblock %}

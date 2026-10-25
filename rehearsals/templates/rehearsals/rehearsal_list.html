@@ -11,7 +11,7 @@
  {% for rehearsal in rehearsals %}
  <li class="list-group-item d-flex justify-content-between">
  <a href="{% url 'rehearsals:detail' rehearsal.id %}">
- {{ rehearsal.band.name }} – {{ rehearsal.rehearsal_date }}
+ {{ rehearsal.band_name }} – {{ rehearsal.rehearsal_date }}
  </a>
  {% include "rehearsals/includes/rehearsal_status.html" %}
  </li>
