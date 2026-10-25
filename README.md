@@ -1,4 +1,4 @@
-# Система организации музыкальных групп (ПР3, ООП)
+# Система организации музыкальных групп (ПР3 ООП + ПР5 Django)
 
 Консольное приложение для управления музыкальным коллективом:
 учет групп, оценка кандидатов, планирование репетиций,
@@ -137,7 +137,7 @@
 ## Требования
 
 - Python 3.12+
-- pytest, flake8, autopep8
+- Django 5.2, pytest, flake8, autopep8
 
 Установка:
 
@@ -154,18 +154,79 @@ source venv/bin/activate
 
 ## Запуск программы
 
+Консольная версия (сохранена с ПР3):
+
 ```text
 python main.py
 # через WSL:
 wsl ./venv/bin/python main.py
 ```
 
+Веб-версия (Django, ПР5):
+
+```text
+wsl ./venv/bin/python manage.py migrate
+wsl ./venv/bin/python manage.py runserver
+```
+
+После запуска открыть в браузере:
+
+```text
+http://127.0.0.1:8000/
+```
+
+## Страницы веб-интерфейса (ПР5)
+
+- `/` — главная страница: описание приложения и навигация
+  (view-функция `index()`);
+- `/bands/` — список групп: объекты `Band` из `data/bands.json`
+  (view-функция `bands()`);
+- `/bands/<int:band_id>/` — страница группы, доступность на текущую
+  дату через `is_band_available()` (view-функция `band_detail()`);
+- `/rehearsals/` — список репетиций: объекты `Rehearsal`
+  из `data/rehearsals.json` (view-функция `rehearsals()`);
+- `/rehearsals/<int:rehearsal_id>/` — страница репетиции
+  (view-функция `rehearsal_detail()`).
+
+Если группа или репетиция с указанным идентификатором не найдена,
+страница возвращает код статуса 404. Несуществующие адреса
+обрабатывает `handler404` (`homepage.views.page_not_found`).
+
+## Структура Django-проекта (ПР5)
+
+```text
+.
+├── manage.py
+├── bandly/            # конфигурация Django-проекта
+│   ├── settings.py    # LANGUAGE_CODE ru-RU, TIME_ZONE Europe/Moscow
+│   ├── urls.py        # include() трех приложений + handler404
+│   ├── asgi.py
+│   └── wsgi.py
+├── homepage/          # главная страница + page()
+│   ├── views.py       # page(), index(), page_not_found()
+│   └── urls.py
+├── bands/             # группы
+│   ├── views.py       # bands(), band_detail()
+│   └── urls.py
+├── rehearsals/        # репетиции
+│   ├── views.py       # rehearsals(), rehearsal_detail()
+│   └── urls.py
+├── models/            # классы ПР3 (Band, Member, Rehearsal, Room)
+├── data/              # bands.json, members.json, rehearsals.json
+└── tests/             # 47 тестов ПР3
+```
+
+HTML формируется в Python через вспомогательную функцию `page()`
+в `homepage/views.py`: единый каркас (кодировка, viewport,
+Bootstrap 5.3 через CDN, навигация, `container`). В следующей работе
+каркас переедет в базовый шаблон, `page()` будет удалена.
+
 ## Запуск тестов
 
 ```text
 pytest -v
 # через WSL:
-wsl ./venv/bin/pytest -v
+wsl ./venv/bin/python -m pytest -v
 ```
 
 Тесты проверяют: создание объектов и атрибуты, `__str__`,
@@ -173,6 +234,12 @@ wsl ./venv/bin/pytest -v
 `Rehearsal.band is Band`, правило «второе активное
 бронирование запрещено, после отмены — разрешено»,
 `from_data/to_dict`, коллекции, `storage` roundtrip.
+
+Системная проверка Django:
+
+```text
+wsl ./venv/bin/python manage.py check
+```
 
 ## Проверка качества кода
 
@@ -182,10 +249,36 @@ flake8 .
 wsl ./venv/bin/python -m flake8 .
 ```
 
-## План развития
+## Git
 
-- веб-приложение;
-- база данных;
+```text
+git status
+git add .
+git commit -m "PR5: add Django project and web pages"
+```
+
+## Текущее состояние и план развития (ПР5)
+
+Реализовано:
+
+- Django-проект `bandly` и три приложения
+  (`homepage`, `bands`, `rehearsals`);
+- маршрутизация URL двух уровней (`include()`);
+- view-функции и страницы (главная, списки, детальные);
+- динамические URL `<int:band_id>`, `<int:rehearsal_id>`;
+- обработка 404 (ветка «не найдено» + `handler404`);
+- отображение данных предметной области из JSON через логику ПР3
+  (`load_bands`, `find_band_by_id`, `is_band_available`,
+  `find_rehearsal_by_id`, подсчет участников);
+- навигация между страницами;
+- оформление Bootstrap 5.3.
+
+Планируется:
+
+- переход на Django-шаблоны и отказ от функции `page()`;
+- база данных SQLite и SQL-запросы;
+- перенос сущностей в Django ORM;
+- формы создания и редактирования;
 - пользователи и API;
 - контейнеризация;
 - CI/CD.
