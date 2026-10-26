@@ -214,8 +214,8 @@ HTML вынесен из Python-кода в шаблоны, функция `page
   блоки `title`/`content`, подвал с годом через `main.js`;
 - навигация `templates/includes/navigation.html` подключена через
   `{% include %}`, ссылки через `{% url %}`
-  (`homepage:index`, `bands:list`, `bands:detail`,
-  `rehearsals:list`, `rehearsals:detail`);
+  (`homepage:index`, `bands:list`, `bands:detail`, `bands:available`,
+  `rehearsals:list`, `rehearsals:detail`, `rehearsals:statistics`);
 - пространства имен: `app_name` в `homepage/urls.py`,
   `bands/urls.py`, `rehearsals/urls.py`;
 - карточка группы `bands/includes/band_card.html`,
@@ -231,7 +231,7 @@ HTML вынесен из Python-кода в шаблоны, функция `page
   `js/main.js` (текущий год в подвале), `img/logo.png`;
   подключение через `{% load static %}` и `{% static %}`.
 
-## Структура Django-проекта (ПР5)
+## Структура Django-проекта (ПР5–ПР7)
 
 ```text
 .
@@ -248,13 +248,15 @@ HTML вынесен из Python-кода в шаблоны, функция `page
 │   ├── templates/homepage/  # index.html, 404.html
 │   └── static/homepage/     # css/style.css, js/main.js, img/logo.png
 ├── bands/             # группы
-│   ├── views.py       # band_list(), band_detail() через render()
-│   ├── urls.py        # app_name bands, names list/detail
-│   └── templates/bands/     # band_list/detail + includes/band_card
+│   ├── views.py       # band_list(), band_detail(), available_bands()
+│   ├── urls.py        # app_name bands, names list/detail/available
+│   └── templates/bands/     # band_list/detail/available
+│       └── includes/band_card.html
 ├── rehearsals/        # репетиции
-│   ├── views.py       # rehearsal_list/detail через render()
-│   ├── urls.py        # app_name rehearsals, names list/detail
-│   └── templates/rehearsals/  # list/detail + includes/status
+│   ├── views.py       # rehearsal_list/detail(), statistics()
+│   ├── urls.py        # app_name rehearsals, names list/detail/statistics
+│   └── templates/rehearsals/  # list/detail/statistics
+│       └── includes/rehearsal_status.html
 ├── models/            # классы ПР3 (Band, Member, Rehearsal, Room)
 ├── db/                # SQLite-слой ПР7: database.py, import_json.py
 ├── sql/               # schema.sql, queries.sql (12 запросов) (ПР7)
@@ -352,9 +354,10 @@ git commit -m "PR7: add SQLite database and SQL queries"
 - собственные статические файлы (CSS, JS, логотип) + Bootstrap 5.3;
 - динамические URL `<int:band_id>`, `<int:rehearsal_id>`;
 - обработка 404 (ветка «не найдено» + `handler404`);
-- отображение данных предметной области из JSON через логику ПР3
+- консольное приложение ПР3 сохранено: логика
   (`load_bands`, `find_band_by_id`, `is_band_available`,
-  `find_rehearsal_by_id`, подсчет участников);
+  `find_rehearsal_by_id`, подсчет участников) работает в `main.py`;
+  веб-слой получает данные из SQLite через `get_connection()`;
 - навигация между страницами через `{% url %}`
   (Главная, Группы, Репетиции, Статистика);
 - слой SQLite: `data/bands.sqlite`, `sql/schema.sql`,
