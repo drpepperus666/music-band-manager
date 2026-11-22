@@ -1,12 +1,14 @@
-"""Страницы групп: данные через Django ORM (ПР9, ПР10 slug)."""
+"""Страницы групп: данные через Django ORM (ПР9–ПР11)."""
 
 from datetime import date, datetime
 
 from django.db.models import Q
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
 
 from bands.models import Band
 from rehearsals.models import Rehearsal
+
+from .forms import BandImageForm
 
 
 def band_list(request):
@@ -26,8 +28,19 @@ def band_list(request):
 
 
 def band_detail(request, slug):
-    """Страница группы из ORM, 404 если не найдена."""
+    """Страница группы: данные, фото, доступность на сегодня."""
     band = get_object_or_404(Band, slug=slug)
+    if request.method == "POST":
+        photo_form = BandImageForm(
+            request.POST,
+            request.FILES,
+            instance=band,
+        )
+        if photo_form.is_valid():
+            photo_form.save()
+            return redirect("bands:detail", slug=band.slug)
+    else:
+        photo_form = BandImageForm()
     members_count = band.members.count()
     busy = band.rehearsals.active().filter(
         rehearsal_date=date.today(),
@@ -36,6 +49,7 @@ def band_detail(request, slug):
         "band": band,
         "members_count": members_count,
         "available": not busy,
+        "photo_form": photo_form,
     }
     return render(request, "bands/band_detail.html", context)
 

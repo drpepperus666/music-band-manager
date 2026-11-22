@@ -1,13 +1,15 @@
-"""Страницы репетиций: данные через Django ORM (ПР9, ПР10 статусы)."""
-
-from datetime import datetime
+"""Страницы репетиций: формы Django (ПР11) + ORM (ПР9–ПР10)."""
 
 from django.core.paginator import Paginator
 from django.db.models import Avg, Count, F, Q
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
+from django.views.decorators.http import require_POST
 
 from bands.models import Band
-from rehearsals.models import Rehearsal
+
+from .forms import RehearsalFilterForm, RehearsalForm
+from .models import Rehearsal
 
 SORT_FIELDS = {
     "date": "rehearsal_date",
@@ -17,30 +19,33 @@ SORT_FIELDS = {
 
 
 def rehearsal_list(request):
-    """Список активных репетиций: фильтры, поиск, сортировка, пагинация."""
-    booking_date = request.GET.get("date", "").strip()
-    band_id = request.GET.get("band", "").strip()
-    query = request.GET.get("q", "").strip()
-    sort = request.GET.get("sort", "date")
+    """Список активных репетиций: форма фильтра, сортировка, пагинация."""
+    form = RehearsalFilterForm(request.GET or None)
+    form_valid = form.is_bound and form.is_valid()
     error = None
+    booking_date = None
+    band_id = None
+    sort = "date"
+    if form_valid:
+        booking_date = form.cleaned_data.get("date")
+        band = form.cleaned_data.get("band")
+        band_id = band.pk if band else None
+        query = form.cleaned_data.get("q") or ""
+        sort = form.cleaned_data.get("sort") or "date"
+    else:
+        query = ""
+        if form.is_bound:
+            error = "Проверьте корректность параметров фильтрации."
 
     rehearsals_data = Rehearsal.objects.active()
 
     if booking_date:
-        try:
-            selected_date = datetime.strptime(
-                booking_date,
-                "%Y-%m-%d",
-            ).date()
-        except ValueError:
-            error = "Укажите корректную дату."
-        else:
-            rehearsals_data = rehearsals_data.filter(
-                rehearsal_date=selected_date,
-            )
-    if band_id.isdigit():
         rehearsals_data = rehearsals_data.filter(
-            band_id=int(band_id),
+            rehearsal_date=booking_date,
+        )
+    if band_id:
+        rehearsals_data = rehearsals_data.filter(
+            band_id=band_id,
         )
     if query:
         rehearsals_data = rehearsals_data.filter(
@@ -69,11 +74,7 @@ def rehearsal_list(request):
     context = {
         "rehearsals": page_obj,
         "page_obj": page_obj,
-        "booking_date": booking_date,
-        "selected_band": band_id,
-        "query": query,
-        "sort": sort if sort in SORT_FIELDS else "date",
-        "bands": Band.objects.order_by("name"),
+        "form": form,
         "error": error,
     }
     return render(request, "rehearsals/rehearsal_list.html", context)
@@ -90,6 +91,53 @@ def rehearsal_detail(request, rehearsal_id):
         "rehearsals/rehearsal_detail.html",
         {"rehearsal": rehearsal},
     )
+
+
+def rehearsal_create(request):
+    """Создание репетиции через ModelForm."""
+    if request.method == "POST":
+        form = RehearsalForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect("rehearsals:list")
+    else:
+
+        form = RehearsalForm(
+            initial={"rehearsal_date": timezone.localdate()},
+        )
+    context = {"form": form}
+    return render(request, "rehearsals/rehearsal_form.html", context)
+
+
+def rehearsal_update(request, rehearsal_id):
+    """Редактирование активной репетиции через ModelForm."""
+    rehearsal = get_object_or_404(
+        Rehearsal.objects.active(),
+        pk=rehearsal_id,
+    )
+    if request.method == "POST":
+        form = RehearsalForm(request.POST, instance=rehearsal)
+        if form.is_valid():
+            form.save()
+            return redirect("rehearsals:list")
+    else:
+        form = RehearsalForm(instance=rehearsal)
+    context = {
+        "form": form,
+        "rehearsal": rehearsal,
+    }
+    return render(request, "rehearsals/rehearsal_form.html", context)
+
+
+@require_POST
+def rehearsal_cancel(request, rehearsal_id):
+    """Отмена активной репетиции (статус, без удаления)."""
+    rehearsal = get_object_or_404(
+        Rehearsal.objects.active(),
+        pk=rehearsal_id,
+    )
+    rehearsal.cancel()
+    return redirect("rehearsals:list")
 
 
 def statistics(request):

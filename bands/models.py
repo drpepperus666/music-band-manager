@@ -31,6 +31,12 @@ class Band(models.Model):
         editable=False,
         verbose_name="URL-идентификатор",
     )
+    image = models.ImageField(
+        upload_to="bands/",
+        blank=True,
+        null=True,
+        verbose_name="Фото группы",
+    )
 
     def save(self, *args, **kwargs):
         if not self.slug:

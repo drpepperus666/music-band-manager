@@ -5,34 +5,40 @@
 {% block content %}
  <h1>Репетиции</h1>
  <p>
- Всего репетиций: {{ page_obj.paginator.count }}
+ <a href="{% url 'rehearsals:create' %}" class="btn btn-primary">Создать репетицию</a>
  </p>
+ {% if error %}
+ <div class="alert alert-danger">{{ error }}</div>
+ {% endif %}
  <form method="get" class="mb-4">
   <div class="row g-3 align-items-end">
    <div class="col-md-3">
-    <label for="date" class="form-label">Дата репетиции</label>
-    <input type="date" id="date" name="date" class="form-control" value="{{ booking_date }}">
+    {{ form.date.label_tag }}
+    {{ form.date }}
+    {% for error in form.date.errors %}
+    <div class="text-danger">{{ error }}</div>
+    {% endfor %}
    </div>
    <div class="col-md-3">
-    <label for="band" class="form-label">Группа</label>
-    <select id="band" name="band" class="form-select">
-     <option value="">Все группы</option>
-     {% for band in bands %}
-     <option value="{{ band.pk }}"{% if selected_band == band.pk|stringformat:"s" %} selected{% endif %}>{{ band.name }}</option>
-     {% endfor %}
-    </select>
+    {{ form.band.label_tag }}
+    {{ form.band }}
+    {% for error in form.band.errors %}
+    <div class="text-danger">{{ error }}</div>
+    {% endfor %}
    </div>
    <div class="col-md-3">
-    <label for="q" class="form-label">Поиск</label>
-    <input type="text" id="q" name="q" class="form-control" value="{{ query }}" placeholder="Название или инструмент">
+    {{ form.q.label_tag }}
+    {{ form.q }}
+    {% for error in form.q.errors %}
+    <div class="text-danger">{{ error }}</div>
+    {% endfor %}
    </div>
    <div class="col-md-3">
-    <label for="sort" class="form-label">Сортировать по</label>
-    <select id="sort" name="sort" class="form-select">
-     <option value="date"{% if sort == "date" %} selected{% endif %}>Дате</option>
-     <option value="band"{% if sort == "band" %} selected{% endif %}>Группе</option>
-     <option value="participants"{% if sort == "participants" %} selected{% endif %}>Участникам</option>
-    </select>
+    {{ form.sort.label_tag }}
+    {{ form.sort }}
+    {% for error in form.sort.errors %}
+    <div class="text-danger">{{ error }}</div>
+    {% endfor %}
    </div>
    <div class="col-md-3">
     <button type="submit" class="btn btn-primary">Найти</button>
@@ -40,16 +46,23 @@
    </div>
   </div>
  </form>
- {% if error %}
- <p class="text-danger">{{ error }}</p>
- {% endif %}
+ <p>
+ Всего репетиций: {{ page_obj.paginator.count }}
+ </p>
  <ul class="list-group">
  {% for rehearsal in rehearsals %}
-  <li class="list-group-item d-flex justify-content-between">
+  <li class="list-group-item d-flex justify-content-between align-items-center">
    <a href="{% url 'rehearsals:detail' rehearsal.id %}">
     {{ rehearsal.band_name }} – {{ rehearsal.rehearsal_date }}
    </a>
-   {% include "rehearsals/includes/rehearsal_status.html" %}
+   <span>
+    {% include "rehearsals/includes/rehearsal_status.html" %}
+    <a href="{% url 'rehearsals:update' rehearsal.id %}" class="btn btn-warning btn-sm">Редактировать</a>
+    <form method="post" action="{% url 'rehearsals:cancel' rehearsal.id %}" class="d-inline">
+     {% csrf_token %}
+     <button type="submit" class="btn btn-danger btn-sm">Отменить</button>
+    </form>
+   </span>
   </li>
  {% empty %}
   <li class="list-group-item">
