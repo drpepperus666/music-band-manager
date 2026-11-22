@@ -43,6 +43,9 @@
    <a href="{% url 'rehearsals:list' %}" class="btn btn-outline-secondary">Сбросить</a>
   </div>
  </form>
+ {% if error %}
+ <div class="alert alert-danger">{{ error }}</div>
+ {% endif %}
  <p>
  Всего репетиций: {{ page_obj.paginator.count }}
  </p>
