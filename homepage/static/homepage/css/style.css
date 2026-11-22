@@ -54,8 +54,16 @@ a {
  color: var(--bandly-gold);
 }
 
-a:hover {
+a:not(.btn):hover {
  color: #ffd76a;
+}
+
+.btn-outline-warning:hover {
+ color: #221503 !important;
+}
+
+.btn-outline-danger:hover {
+ color: #fff !important;
 }
 
 .bandly-logo {
@@ -124,7 +132,7 @@ nav.nav .nav-link:hover {
  text-decoration: none;
 }
 
-.list-group-item a:hover {
+.list-group-item a:not(.btn):hover {
  color: var(--bandly-gold);
 }
 
@@ -177,6 +185,21 @@ nav.nav .nav-link:hover {
  color: #fff !important;
  border-radius: 10px !important;
  color-scheme: dark;
+}
+
+input[type="file"]::file-selector-button {
+ background: linear-gradient(92deg, var(--bandly-gold), var(--bandly-orange));
+ border: none;
+ border-radius: 8px;
+ color: #221503;
+ font-weight: 600;
+ padding: 0.45rem 0.9rem;
+ margin-right: 0.75rem;
+ cursor: pointer;
+}
+
+input[type="file"]::file-selector-button:hover {
+ filter: brightness(1.07);
 }
 
 .form-control::placeholder {
