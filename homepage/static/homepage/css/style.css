@@ -1,20 +1,80 @@
 body {
  min-height: 100vh;
+ background-color: #f4f6fa;
+ color: #212529;
+}
+
+main.container {
+ max-width: 960px;
+ background-color: #ffffff;
+ border-radius: 12px;
+ box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+ padding: 1.5rem 2rem;
+ margin-top: 1rem;
+ margin-bottom: 1rem;
+}
+
+.bandly-logo {
+ width: 120px;
+ height: auto;
+ margin: 1rem 0 0.25rem;
+}
+
+nav.nav {
+ gap: 0.25rem;
+ padding: 0.5rem 0;
+ margin-bottom: 0.5rem;
+}
+
+nav.nav .nav-link {
+ border-radius: 8px;
+ padding: 0.5rem 0.9rem;
+ color: #0d6efd;
+}
+
+nav.nav .nav-link:hover {
+ background-color: #e7f0ff;
 }
 
 .band-card {
  margin-bottom: 1rem;
- padding: 1rem;
- border: 1px solid #ddd;
- border-radius: 8px;
+ padding: 1rem 1.25rem;
+ border: 1px solid #e2e6ea;
+ border-radius: 12px;
+ box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+.band-card h2,
+.band-card h3 {
+ margin-bottom: 0.5rem;
 }
 
 .rehearsal-status {
  font-weight: 600;
 }
 
-.bandly-logo {
- width: 120px;
- height: auto;
- margin: 1rem 0;
+.list-group-item {
+ border-radius: 10px !important;
+ margin-bottom: 0.5rem;
+ border: 1px solid #e2e6ea;
+}
+
+footer.container {
+ text-align: center;
+ color: #6c757d;
+ font-size: 0.9rem;
+}
+
+img.img-fluid {
+ border-radius: 10px;
+ box-shadow: 0 1px 6px rgba(0, 0, 0, 0.12);
+}
+
+form .btn + .btn,
+form .btn + a {
+ margin-left: 0.5rem;
+}
+
+.alert {
+ border-radius: 10px;
 }
