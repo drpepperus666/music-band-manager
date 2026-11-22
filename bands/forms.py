@@ -17,3 +17,8 @@ class BandImageForm(forms.ModelForm):
         help_texts = {
             "image": "Загрузите фотографию группы.",
         }
+        widgets = {
+            "image": forms.ClearableFileInput(
+                attrs={"class": "form-control"}
+            ),
+        }

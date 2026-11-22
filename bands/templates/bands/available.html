@@ -4,30 +4,41 @@
 {% endblock %}
 {% block content %}
  <h1>Свободные группы</h1>
- <form method="get">
-  <label for="date">Дата:</label>
-  <input
-  type="date"
-  id="date"
-  name="date"
-  value="{{ booking_date }}"
-  >
-  <button type="submit">Найти</button>
+ <form method="get" class="d-flex flex-wrap gap-2 align-items-end mb-3">
+  <div>
+   <label for="date" class="form-label">Дата</label>
+   <input
+   type="date"
+   id="date"
+   name="date"
+   class="form-control"
+   value="{{ booking_date }}"
+   >
+  </div>
+  <div>
+   <button type="submit" class="btn btn-primary">Найти</button>
+  </div>
  </form>
  {% if error %}
- <p>{{ error }}</p>
+ <div class="alert alert-danger">{{ error }}</div>
  {% endif %}
  {% if booking_date and not error %}
  <h2>Дата: {{ booking_date }}</h2>
+ <ul class="list-group band-grid">
  {% for band in bands %}
- <article class="card band-card mb-3">
-  <div class="card-body">
-   <h3><a href="{{ band.get_absolute_url }}">{{ band.name }}</a></h3>
-   <p>Инструмент: {{ band.required_instrument }}</p>
-  </div>
- </article>
+  <li class="band-grid-item">
+  <article class="card band-card">
+   <div class="card-body">
+    <h3 class="card-title"><a href="{{ band.get_absolute_url }}">{{ band.name }}</a></h3>
+    <p class="card-text band-card-instrument">Инструмент: {{ band.required_instrument }}</p>
+   </div>
+  </article>
+  </li>
  {% empty %}
- <p>На выбранную дату свободных групп нет.</p>
+  <li class="band-grid-empty">
+  <p>На выбранную дату свободных групп нет.</p>
+  </li>
  {% endfor %}
+ </ul>
  {% endif %}
 {% endblock %}
