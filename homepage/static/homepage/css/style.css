@@ -58,6 +58,15 @@ a:not(.btn):hover {
  color: #ffd76a;
 }
 
+.bandly-logo-link {
+ display: inline-block;
+ cursor: pointer;
+}
+
+.bandly-logo-link:hover {
+ filter: brightness(1.05);
+}
+
 .btn-outline-warning:hover {
  color: #221503 !important;
 }
