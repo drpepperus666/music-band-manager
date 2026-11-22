@@ -1,16 +1,16 @@
-<article class="card band-card mb-3">
+<article class="card band-card">
  <div class="card-body">
  <h2 class="card-title">
  {{ band.name|default:"Без названия" }}
  </h2>
- <p class="card-text">
+ <p class="card-text band-card-instrument">
  Инструмент: {{ band.required_instrument|default:"—" }}
  </p>
- <p class="card-text">
+ <p class="card-text band-card-status">
  {% if band.is_active %}
- Активна
+ <span class="badge bg-success">Активна</span>
  {% else %}
- Неактивна
+ <span class="badge bg-secondary">Неактивна</span>
  {% endif %}
  </p>
  <a

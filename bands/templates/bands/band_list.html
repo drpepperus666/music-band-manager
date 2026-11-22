@@ -4,27 +4,31 @@
 {% endblock %}
 {% block content %}
  <h1>Группы</h1>
- <form method="get" class="mb-3">
-  <label for="q">Поиск:</label>
-  <input type="text" id="q" name="q" value="{{ query }}" placeholder="Название или инструмент">
-  <button type="submit">Найти</button>
-  {% if query %}<a href="{% url 'bands:list' %}">Сбросить</a>{% endif %}
+ <form method="get" class="d-flex flex-wrap gap-2 align-items-end mb-3">
+  <div>
+   <label for="q" class="form-label">Поиск</label>
+   <input type="text" id="q" name="q" class="form-control" value="{{ query }}" placeholder="Название или инструмент">
+  </div>
+  <div>
+   <button type="submit" class="btn btn-primary">Найти</button>
+   {% if query %}<a href="{% url 'bands:list' %}" class="btn btn-outline-secondary">Сбросить</a>{% endif %}
+  </div>
  </form>
- <p>
+ <p class="bandly-muted">
  Всего групп: {{ bands|length }}
  </p>
  <p>
- <a href="{% url 'bands:available' %}">
+ <a href="{% url 'bands:available' %}" class="btn btn-outline-warning">
  Найти свободную группу
  </a>
  </p>
- <ul class="list-group">
+ <ul class="list-group band-grid">
  {% for band in bands %}
-  <li class="list-group-item">
+  <li class="band-grid-item">
    {% include "bands/includes/band_card.html" %}
   </li>
  {% empty %}
-  <li class="list-group-item">
+  <li class="band-grid-empty">
    Группы не найдены.
   </li>
  {% endfor %}

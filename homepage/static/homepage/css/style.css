@@ -270,3 +270,48 @@ form .btn + .btn,
 form .btn + a {
  margin-left: 0.5rem;
 }
+
+/* Читаемый текст на тёмных карточках */
+.card,
+.card-body,
+.band-card {
+ color: var(--bandly-text);
+}
+
+.band-card-instrument,
+.bandly-muted {
+ color: var(--bandly-muted);
+}
+
+/* Сетка групп: без карточки-в-карточке */
+.band-grid {
+ display: grid;
+ grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+ gap: 1rem;
+ padding-left: 0;
+ list-style: none;
+}
+
+.band-grid-item,
+.band-grid-empty {
+ background: transparent !important;
+ border: none !important;
+ padding: 0 !important;
+ margin: 0 !important;
+}
+
+.band-grid .band-card {
+ height: 100%;
+ margin-bottom: 0;
+}
+
+.band-grid .band-card .card-body {
+ display: flex;
+ flex-direction: column;
+ gap: 0.35rem;
+}
+
+.band-grid .band-card .btn {
+ align-self: flex-start;
+ margin-top: 0.5rem;
+}
