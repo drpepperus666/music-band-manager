@@ -206,11 +206,26 @@ nav.nav {
 }
 
 nav.nav .nav-link {
+ flex: 1;
+ text-align: center;
+ position: relative;
  border-radius: 10px;
  padding: 0.5rem 1rem;
  color: var(--star-pearl);
  font-weight: 500;
  transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+
+nav.nav .nav-link:not(:last-child)::after {
+ content: "✦";
+ position: absolute;
+ right: -0.42rem;
+ top: 50%;
+ transform: translateY(-52%);
+ font-size: 0.62rem;
+ color: var(--star-rose);
+ text-shadow: 0 0 8px rgba(240, 163, 207, 0.9);
+ pointer-events: none;
 }
 
 nav.nav .nav-link:hover {
@@ -505,7 +520,8 @@ nav.nav .nav-link:hover {
 }
 
 .text-danger {
- color: #ff9aa8 !important;
+ color: #ffc7e3 !important;
+ font-weight: 500;
 }
 
 input[type="file"]::file-selector-button {
@@ -655,12 +671,10 @@ img.img-fluid {
 }
 
 .photo-form {
- display: flex;
- flex-direction: column;
- align-items: flex-start;
- gap: 0.7rem;
+ line-height: 2.2;
  margin: 1.25rem 0;
  padding: 1rem 1.25rem;
+ color: var(--star-muted);
  background: rgba(244, 241, 255, 0.05);
  border: 1px solid var(--star-border);
  border-radius: 16px;
@@ -669,6 +683,60 @@ img.img-fluid {
 
 .photo-form .form-control {
  width: 100%;
+}
+
+.photo-form a {
+ font-weight: 600;
+ background: rgba(240, 163, 207, 0.12);
+ border: 1px solid rgba(240, 163, 207, 0.4);
+ border-radius: 999px;
+ padding: 0.15rem 0.7rem;
+ text-decoration: none;
+ white-space: nowrap;
+}
+
+.photo-form a:hover {
+ background: rgba(240, 163, 207, 0.22);
+ box-shadow: 0 0 14px rgba(240, 163, 207, 0.4);
+}
+
+.photo-form input[type="checkbox"] {
+ appearance: none;
+ -webkit-appearance: none;
+ width: 1.15rem;
+ height: 1.15rem;
+ border-radius: 6px;
+ border: 1px solid rgba(244, 241, 255, 0.35);
+ background: rgba(244, 241, 255, 0.08);
+ cursor: pointer;
+ vertical-align: -0.2rem;
+ position: relative;
+ transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.photo-form input[type="checkbox"]:hover {
+ border-color: var(--star-rose);
+ box-shadow: 0 0 10px rgba(240, 163, 207, 0.4);
+}
+
+.photo-form input[type="checkbox"]:checked {
+ background: linear-gradient(120deg, var(--star-violet), var(--star-rose));
+ border-color: transparent;
+}
+
+.photo-form input[type="checkbox"]:checked::after {
+ content: "✓";
+ position: absolute;
+ inset: 0;
+ color: #fff;
+ font-size: 0.8rem;
+ line-height: 1.1rem;
+ text-align: center;
+ font-weight: 700;
+}
+
+.photo-form label {
+ color: var(--star-pearl);
 }
 
 footer.container {
@@ -744,19 +812,6 @@ nav.nav .nav-link.active {
  background: linear-gradient(100deg, rgba(139, 123, 216, 0.55), rgba(240, 163, 207, 0.45));
  color: #fff;
  box-shadow: 0 0 18px rgba(139, 123, 216, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.25);
-}
-
-nav.nav .nav-link.active::after {
- content: "";
- position: absolute;
- left: 50%;
- bottom: 3px;
- width: 4px;
- height: 4px;
- border-radius: 50%;
- background: #fff;
- box-shadow: 0 0 8px #fff;
- transform: translateX(-50%);
 }
 
 /* ---------- градиентная рамка полей ---------- */
@@ -993,4 +1048,57 @@ html::before {
 .detail-photo .photo-form {
  margin: 1rem 0 0;
  max-width: none;
+}
+
+/* ---------- календарь flatpickr в теме сайта ---------- */
+
+.flatpickr-calendar {
+ background: linear-gradient(165deg, rgba(36, 36, 80, 0.97), rgba(24, 24, 58, 0.97));
+ border: 1px solid rgba(244, 241, 255, 0.2);
+ border-radius: 16px;
+ box-shadow: 0 18px 50px rgba(0, 0, 0, 0.6), 0 0 24px rgba(139, 123, 216, 0.3);
+}
+
+.flatpickr-months .flatpickr-month,
+.flatpickr-current-month .flatpickr-monthDropdown-months,
+.flatpickr-current-month input.cur-year,
+span.flatpickr-weekday {
+ color: var(--star-pearl);
+ fill: var(--star-pearl);
+}
+
+span.flatpickr-weekday {
+ color: var(--star-muted);
+}
+
+.flatpickr-day {
+ color: var(--star-pearl);
+ border-radius: 10px;
+}
+
+.flatpickr-day:hover {
+ background: rgba(240, 163, 207, 0.2);
+ border-color: rgba(240, 163, 207, 0.5);
+}
+
+.flatpickr-day.selected,
+.flatpickr-day.selected:hover {
+ background: linear-gradient(120deg, var(--star-violet), var(--star-rose));
+ border-color: transparent;
+ box-shadow: 0 0 14px rgba(240, 163, 207, 0.5);
+}
+
+.flatpickr-day.today {
+ border-color: var(--star-rose);
+}
+
+.flatpickr-day.flatpickr-disabled,
+.flatpickr-day.prevMonthDay,
+.flatpickr-day.nextMonthDay {
+ color: rgba(157, 154, 192, 0.5);
+}
+
+.flatpickr-months .flatpickr-prev-month svg,
+.flatpickr-months .flatpickr-next-month svg {
+ fill: var(--star-rose);
 }

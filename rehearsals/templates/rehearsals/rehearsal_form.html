@@ -12,7 +12,8 @@
  {% else %}
  <h1>Создание репетиции</h1>
  {% endif %}
- <form method="post">
+ <form method="post" novalidate>
+ {% csrf_token %}
  {% for field in form %}
   <div class="mb-3">
   {{ field.label_tag }}{% if field.field.required %}<span class="required-star" title="Обязательное поле">*</span>{% endif %}

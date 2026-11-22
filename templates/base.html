@@ -10,6 +10,10 @@
  >
  <link
  rel="stylesheet"
+ href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css"
+ >
+ <link
+ rel="stylesheet"
  href="{% static 'homepage/css/style.css' %}"
  >
 </head>
@@ -34,5 +38,12 @@
  </p>
  </footer>
  <script src="{% static 'homepage/js/main.js' %}"></script>
+ <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
+ <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/ru.js"></script>
+ <script>
+ document.querySelectorAll(".bandly-date").forEach(function (el) {
+  flatpickr(el, { dateFormat: "Y-m-d", allowInput: true, locale: "ru" });
+ });
+ </script>
 </body>
 </html>

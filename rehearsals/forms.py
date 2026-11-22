@@ -20,8 +20,11 @@ class RehearsalFilterForm(forms.Form):
     date = forms.DateField(
         required=False,
         label="Дата репетиции",
-        widget=forms.DateInput(
-            attrs={"type": "date", "class": "form-control"}
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control bandly-date",
+                "placeholder": "ГГГГ-ММ-ДД",
+            }
         ),
     )
     band = forms.ModelChoiceField(
@@ -79,8 +82,11 @@ class RehearsalForm(forms.ModelForm):
         }
         widgets = {
             "band": forms.Select(attrs={"class": "form-select"}),
-            "rehearsal_date": forms.DateInput(
-                attrs={"type": "date", "class": "form-control"}
+            "rehearsal_date": forms.TextInput(
+                attrs={
+                    "class": "form-control bandly-date",
+                    "placeholder": "ГГГГ-ММ-ДД",
+                }
             ),
         }
 
