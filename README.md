@@ -467,6 +467,14 @@ wsl ./venv/bin/python -m pytest -v
 бронирование запрещено, после отмены — разрешено»,
 `from_data/to_dict`, коллекции, `storage` roundtrip.
 
+Django-тесты форм и представлений (`rehearsals/tests.py`,
+17 тестов: фильтр, валидация даты/занятости/участников,
+создание/редактирование/отмена, менеджер):
+
+```text
+wsl ./venv/bin/python manage.py test rehearsals
+```
+
 Системная проверка Django:
 
 ```text

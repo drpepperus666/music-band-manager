@@ -40,9 +40,7 @@ def rehearsal_list(request):
     rehearsals_data = Rehearsal.objects.active()
 
     if booking_date:
-        rehearsals_data = rehearsals_data.filter(
-            rehearsal_date=booking_date,
-        )
+        rehearsals_data = rehearsals_data.for_date(booking_date)
     if band_id:
         rehearsals_data = rehearsals_data.filter(
             band_id=band_id,

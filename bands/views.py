@@ -40,7 +40,7 @@ def band_detail(request, slug):
             photo_form.save()
             return redirect("bands:detail", slug=band.slug)
     else:
-        photo_form = BandImageForm()
+        photo_form = BandImageForm(instance=band)
     members_count = band.members.count()
     busy = band.rehearsals.active().filter(
         rehearsal_date=date.today(),

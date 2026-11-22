@@ -1,5 +1,6 @@
-"""Модели rehearsals: репетиция группы (ПР9 ORM, ПР10 статусы)."""
+"""Модели rehearsals: репетиция группы (ПР9–ПР11)."""
 
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 
@@ -41,7 +42,8 @@ class Rehearsal(models.Model):
         verbose_name="Дата репетиции",
     )
     participants = models.PositiveIntegerField(
-        default=0,
+        default=1,
+        validators=[MinValueValidator(1), MaxValueValidator(100)],
         verbose_name="Число участников",
         help_text="Укажите планируемое число участников репетиции.",
     )

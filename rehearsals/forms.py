@@ -20,25 +20,32 @@ class RehearsalFilterForm(forms.Form):
     date = forms.DateField(
         required=False,
         label="Дата репетиции",
-        widget=forms.DateInput(attrs={"type": "date"}),
+        widget=forms.DateInput(
+            attrs={"type": "date", "class": "form-control"}
+        ),
     )
     band = forms.ModelChoiceField(
         queryset=Band.objects.order_by("name"),
         required=False,
         label="Группа",
         empty_label="Все группы",
+        widget=forms.Select(attrs={"class": "form-select"}),
     )
     q = forms.CharField(
         required=False,
         label="Поиск",
         widget=forms.TextInput(
-            attrs={"placeholder": "Название или инструмент"}
+            attrs={
+                "placeholder": "Название или инструмент",
+                "class": "form-control",
+            }
         ),
     )
     sort = forms.ChoiceField(
         required=False,
         label="Сортировка",
         choices=SORT_CHOICES,
+        widget=forms.Select(attrs={"class": "form-select"}),
     )
 
 
@@ -74,8 +81,8 @@ class RehearsalForm(forms.ModelForm):
         }
 
     def clean_rehearsal_date(self):
-        rehearsal_date = self.cleaned_data["rehearsal_date"]
-        if rehearsal_date < timezone.localdate():
+        rehearsal_date = self.cleaned_data.get("rehearsal_date")
+        if rehearsal_date and rehearsal_date < timezone.localdate():
             raise forms.ValidationError(
                 "Нельзя создать репетицию на прошедшую дату."
             )
@@ -86,9 +93,10 @@ class RehearsalForm(forms.ModelForm):
         band = cleaned_data.get("band")
         rehearsal_date = cleaned_data.get("rehearsal_date")
         if band and rehearsal_date:
-            busy = Rehearsal.objects.active().filter(
-                band=band,
-                rehearsal_date=rehearsal_date,
+            busy = (
+                Rehearsal.objects.active()
+                .filter(band=band)
+                .for_date(rehearsal_date)
             )
             if self.instance and self.instance.pk:
                 busy = busy.exclude(pk=self.instance.pk)
