@@ -24,6 +24,7 @@ class RehearsalFilterForm(forms.Form):
             attrs={
                 "class": "form-control bandly-date",
                 "placeholder": "ГГГГ-ММ-ДД",
+                "autocomplete": "off",
             }
         ),
     )
@@ -41,6 +42,7 @@ class RehearsalFilterForm(forms.Form):
             attrs={
                 "placeholder": "Название или инструмент",
                 "class": "form-control",
+                "autocomplete": "off",
             }
         ),
     )
@@ -86,6 +88,7 @@ class RehearsalForm(forms.ModelForm):
                 attrs={
                     "class": "form-control bandly-date",
                     "placeholder": "ГГГГ-ММ-ДД",
+                    "autocomplete": "off",
                 }
             ),
         }

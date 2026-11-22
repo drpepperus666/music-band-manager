@@ -506,8 +506,15 @@ nav.nav .nav-link:hover {
  box-shadow: 0 0 0 0.2rem rgba(240, 163, 207, 0.25), 0 0 18px rgba(240, 163, 207, 0.2) !important;
 }
 
-.form-select option {
- color: #111;
+.form-select option,
+.form-select optgroup {
+ background-color: #23234d;
+ color: var(--star-pearl);
+}
+
+.form-select option:checked {
+ background-color: #6d5fc0;
+ color: #fff;
 }
 
 .form-label {
