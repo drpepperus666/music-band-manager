@@ -176,6 +176,7 @@ nav.nav .nav-link:hover {
  border: 1px solid rgba(255, 255, 255, 0.18) !important;
  color: #fff !important;
  border-radius: 10px !important;
+ color-scheme: dark;
 }
 
 .form-control::placeholder {
