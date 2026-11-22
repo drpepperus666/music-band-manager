@@ -6,8 +6,12 @@
  <span class="badge bg-info rehearsal-status rehearsal-status-completed">
  Завершена
  </span>
-{% else %}
+{% elif rehearsal.status == "active" %}
  <span class="badge bg-success rehearsal-status rehearsal-status-active">
  Активна
+ </span>
+{% else %}
+ <span class="badge bg-warning rehearsal-status rehearsal-status-unknown">
+ Статус неизвестен
  </span>
 {% endif %}

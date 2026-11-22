@@ -244,14 +244,15 @@ HTML вынесен из Python-кода в шаблоны, функция `page
   `js/main.js` (текущий год в подвале), `img/logo.png`;
   подключение через `{% load static %}` и `{% static %}`.
 
-## Структура Django-проекта (ПР5–ПР9)
+## Структура Django-проекта (ПР5–ПР10)
 
 ```text
 .
 ├── manage.py
 ├── bandly/            # конфигурация Django-проекта
 │   ├── settings.py    # ru-RU, Europe/Moscow, DIRS templates/
-│   ├── urls.py        # include() приложений + handler404
+│   │                   # + toolbar, INTERNAL_IPS, band_context (ПР10)
+│   ├── urls.py        # include() приложений + handler404 + __debug__/
 │   ├── asgi.py
 │   └── wsgi.py
 ├── templates/         # base.html + includes/navigation.html (ПР6)
@@ -260,32 +261,35 @@ HTML вынесен из Python-кода в шаблоны, функция `page
 │   ├── urls.py        # app_name homepage, name index
 │   ├── templates/homepage/  # index.html, 404.html
 │   └── static/homepage/     # css/style.css, js/main.js, img/logo.png
-├── bands/             # группы (ПР9: модель Band)
-│   ├── models.py      # Band: name, foundation_date,
-│   │                   # required_instrument, is_active
-│   ├── views.py       # band_list/detail(), available_bands() на ORM
-│   ├── urls.py        # app_name bands, names list/detail/available
-│   ├── migrations/    # 0001_initial (ПР9)
-│   └── templates/bands/     # band_list/detail/available
-│       └── includes/band_card.html
-├── members/           # участники (ПР9: модель Member)
-│   ├── models.py      # Member: band FK(CASCADE), instrument,
-│   │                   # experience_years, status
-│   └── migrations/    # 0001_initial (ПР9)
-├── rehearsals/        # репетиции (ПР9: модель Rehearsal)
-│   ├── models.py      # Rehearsal: band FK(PROTECT), rehearsal_date,
-│   │                   # participants, is_cancelled + cancel()
-│   ├── views.py       # rehearsal_list/detail(), statistics() на ORM
-│   ├── urls.py        # app_name rehearsals, names list/detail/statistics
-│   ├── migrations/    # 0001_initial (ПР9)
-│   └── templates/rehearsals/  # list/detail/statistics
-│       └── includes/rehearsal_status.html
-├── models/            # классы ПР3 (Band, Member, Rehearsal, Room)
-├── db/                # SQLite-слой ПР7 + import_sqlite_to_orm.py (ПР9)
-├── sql/               # schema.sql, queries.sql (12 запросов) (ПР7)
+├── bands/             # группы (ПР9 модель, ПР10 admin/slug)
+│   ├── models.py      # Band: + slug, get_absolute_url(), save()
+│   ├── context_processors.py  # band_context (ПР10)
+│   ├── admin.py       # BandAdmin + MemberInline/RehearsalInline
+│   ├── views.py       # на ORM + status + slug-деталка
+│   ├── urls.py        # list/detail(slug)/available
+│   ├── migrations/    # 0001 (ПР9), 0002 slug, 0003 populate, 0004 unique
+│   └── templates/bands/
+├── members/           # участники (ПР9 модель, ПР10 admin/GeneratedField)
+│   ├── models.py      # Member: + is_experienced (GeneratedField)
+│   ├── admin.py       # MemberAdmin
+│   └── migrations/    # 0001 (ПР9), 0002 is_experienced
+├── rehearsals/        # репетиции (ПР9 модель, ПР10 admin/статусы)
+│   ├── models.py      # Rehearsal: status TextChoices + QuerySet/Manager
+│   ├── admin.py       # RehearsalAdmin (действия, inline-поля)
+│   ├── views.py       # на ORM + active()/статусы
+│   ├── urls.py        # list/detail/statistics
+│   ├── migrations/    # 0001 (ПР9), 0002 status, 0003 данные, 0004 -флаг
+│   └── templates/rehearsals/
+├── models/            # классы ПР3 (консольный слой, без изменений)
+├── db/                # SQLite-слой ПР7 + import_sqlite_to_orm.py (ПР9/10)
+├── sql/               # schema.sql, queries.sql (ПР7, исторический слой)
 ├── data/              # JSON ПР3 + bands.sqlite (ПР7, источник переноса)
-└── tests/             # 47 тестов ПР3
+└── tests/             # 47 тестов ПР3 (консольный слой)
 ```
+
+Примечание: флаг `is_cancelled` остался только в исторических слоях
+(консольные классы `models/`, `sql/schema.sql`, `tests/`, `data/`);
+в Django ORM его заменил `Rehearsal.status`.
 
 Генерация HTML через функцию `page()` (ПР5) удалена в ПР6:
 представления готовят контекст и вызывают `render()`,

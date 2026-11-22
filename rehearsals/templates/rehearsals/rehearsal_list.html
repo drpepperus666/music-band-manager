@@ -7,6 +7,9 @@
  <p>
  Всего репетиций: {{ page_obj.paginator.count }}
  </p>
+ <form method="get" class="mb-4">
+  <div class="row g-3 align-items-end">
+   <div class="col-md-3">
     <label for="date" class="form-label">Дата репетиции</label>
     <input type="date" id="date" name="date" class="form-control" value="{{ booking_date }}">
    </div>
@@ -40,9 +43,6 @@
  {% if error %}
  <p class="text-danger">{{ error }}</p>
  {% endif %}
- <p>
- Всего репетиций: {{ rehearsals|length }}
- </p>
  <ul class="list-group">
  {% for rehearsal in rehearsals %}
   <li class="list-group-item d-flex justify-content-between">

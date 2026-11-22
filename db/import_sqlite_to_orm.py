@@ -87,7 +87,11 @@ ORDER BY id
                             row["rehearsal_date"]
                         ),
                         "participants": row["participants"],
-                        "is_cancelled": bool(row["is_cancelled"]),
+                        "status": (
+                            Rehearsal.Status.CANCELLED
+                            if row["is_cancelled"]
+                            else Rehearsal.Status.ACTIVE
+                        ),
                     },
                 )
     print("Перенос данных завершён.")
