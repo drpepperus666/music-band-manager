@@ -8,35 +8,36 @@
 {% endblock %}
 {% block content %}
  {% if band %}
+ <div class="detail-head">
  <h1>
  {{ band.name|default:"Без названия" }}
  </h1>
- <p>
- <strong>ID:</strong> {{ band.id }}
- </p>
- <p>
- <strong>Основана:</strong> {{ band.foundation_date }}
- </p>
- <p>
- <strong>Инструмент:</strong> {{ band.required_instrument }}
- </p>
- <p>
- <strong>Статус:</strong>
  {% if band.is_active %}
- Активна
+ <span class="badge bg-success">Активна</span>
  {% else %}
- Неактивна
+ <span class="badge bg-secondary">Неактивна</span>
  {% endif %}
- </p>
- <p>
- <strong>Участников:</strong> {{ members_count }}
- </p>
- {% if band.image %}
- <p>
- <img src="{{ band.image.url }}" alt="{{ band.name }}" class="img-fluid" style="max-width: 400px;">
- </p>
+ </div>
+ <div class="detail-grid">
+ <div class="detail-facts">
+ <div class="fact-row"><span>ID</span><strong>{{ band.id }}</strong></div>
+ <div class="fact-row"><span>Основана</span><strong>{{ band.foundation_date }}</strong></div>
+ <div class="fact-row"><span>Инструмент</span><strong>{{ band.required_instrument }}</strong></div>
+ <div class="fact-row"><span>Участников</span><strong>{{ members_count }}</strong></div>
+ <div class="fact-row">
+ <span>Сегодня</span>
+ {% if available %}
+ <span class="badge bg-success">свободна</span>
  {% else %}
- <p>Фото не загружено.</p>
+ <span class="badge bg-danger">занята</span>
+ {% endif %}
+ </div>
+ </div>
+ <div class="detail-photo">
+ {% if band.image %}
+ <img src="{{ band.image.url }}" alt="{{ band.name }}" class="img-fluid">
+ {% else %}
+ <div class="detail-photo-empty">Фото не загружено</div>
  {% endif %}
  <form method="post" enctype="multipart/form-data" class="photo-form">
  {% csrf_token %}
@@ -47,18 +48,8 @@
  {% endfor %}
  <button type="submit" class="btn btn-primary btn-sm">Загрузить фото</button>
  </form>
- <p>
- Доступность на текущую дату:
- {% if available %}
- <span class="badge bg-success">
- свободна
- </span>
- {% else %}
- <span class="badge bg-danger">
- занята
- </span>
- {% endif %}
- </p>
+ </div>
+ </div>
  {% else %}
  <h1 class="text-danger">
  Группа не найдена

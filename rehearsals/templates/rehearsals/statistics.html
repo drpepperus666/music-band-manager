@@ -4,11 +4,30 @@
 {% endblock %}
 {% block content %}
  <h1>Статистика репетиций</h1>
- <p>Всего репетиций: {{ total_rehearsals }}</p>
- <p>Активных репетиций: {{ active_count }}</p>
- <p>Отменённых: {{ cancelled_count }}</p>
- <p>Завершённых: {{ completed_count }}</p>
- <p>Среднее число участников: {{ avg_participants|default:"—" }}</p>
+ <div class="stat-grid">
+  <div class="stat-card">
+   <div class="stat-value">{{ total_rehearsals }}</div>
+   <div class="stat-label">Всего</div>
+  </div>
+  <div class="stat-card stat-active">
+   <div class="stat-value">{{ active_count }}</div>
+   <div class="stat-label">Активных</div>
+  </div>
+  <div class="stat-card">
+   <div class="stat-value">{{ cancelled_count }}</div>
+   <div class="stat-label">Отменённых</div>
+  </div>
+  <div class="stat-card">
+   <div class="stat-value">{{ completed_count }}</div>
+   <div class="stat-label">Завершённых</div>
+  </div>
+  <div class="stat-card">
+   <div class="stat-value">{{ avg_participants|default:"—" }}</div>
+   <div class="stat-label">Средний состав</div>
+  </div>
+ </div>
+ <h2 class="mt-4">По группам</h2>
+ <div class="stat-groups">
  {% for item in statistics %}
  <article class="statistics-item">
   <h2><a href="{% url 'bands:detail' item.band_slug %}">{{ item.band_name }}</a></h2>
@@ -17,4 +36,5 @@
  {% empty %}
  <p>Данные отсутствуют.</p>
  {% endfor %}
+ </div>
 {% endblock %}

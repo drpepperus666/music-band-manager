@@ -52,6 +52,10 @@ class RehearsalFilterForm(forms.Form):
 class RehearsalForm(forms.ModelForm):
     """Создание и редактирование репетиции."""
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["band"].empty_label = "Выберите группу"
+
     participants = forms.IntegerField(
         min_value=1,
         max_value=100,

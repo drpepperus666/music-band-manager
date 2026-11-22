@@ -1,11 +1,22 @@
 <article class="card band-card">
+ {% if band.image %}
+ <div class="band-card-media">
+ <img src="{{ band.image.url }}" alt="{{ band.name }}">
+ </div>
+ {% else %}
+ <div class="band-card-media band-card-fallback" aria-hidden="true">
+ <span>{{ band.name|default:"?"|slice:":1" }}</span>
+ </div>
+ {% endif %}
  <div class="card-body">
+ <div class="band-card-pass">★ Bandly pass №{{ band.id }}</div>
  <h2 class="card-title">
  {{ band.name|default:"Без названия" }}
  </h2>
- <p class="card-text band-card-instrument">
- Инструмент: {{ band.required_instrument|default:"—" }}
- </p>
+ <div class="band-tags">
+ <span class="band-tag"><em>Инструмент</em>{{ band.required_instrument|default:"—" }}</span>
+ <span class="band-tag"><em>Основана</em>{{ band.foundation_date|date:"Y" }}</span>
+ </div>
  <p class="card-text band-card-status">
  {% if band.is_active %}
  <span class="badge bg-success">Активна</span>

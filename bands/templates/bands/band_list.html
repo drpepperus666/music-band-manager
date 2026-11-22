@@ -14,14 +14,14 @@
    {% if query %}<a href="{% url 'bands:list' %}" class="btn btn-outline-secondary">Сбросить</a>{% endif %}
   </div>
  </form>
- <p class="bandly-muted">
+ <div class="d-flex flex-wrap gap-3 align-items-center mb-3">
+ <span class="bandly-muted">
  Всего групп: {{ bands|length }}
- </p>
- <p>
- <a href="{% url 'bands:available' %}" class="btn btn-outline-warning">
+ </span>
+ <a href="{% url 'bands:available' %}" class="btn btn-outline-warning btn-sm">
  Найти свободную группу
  </a>
- </p>
+ </div>
  <ul class="list-group band-grid">
  {% for band in bands %}
   <li class="band-grid-item">

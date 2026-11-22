@@ -14,6 +14,7 @@
  >
 </head>
 <body>
+ <header class="site-header">
  <a href="{% url 'homepage:index' %}" class="bandly-logo-link" aria-label="На главную">
  <img
  src="{% static 'homepage/img/logo.png' %}"
@@ -22,6 +23,7 @@
  >
  </a>
  {% include "includes/navigation.html" %}
+ </header>
  <main class="container">
  {% block content %}
  {% endblock %}
