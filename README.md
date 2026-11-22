@@ -1,4 +1,4 @@
-# Система организации музыкальных групп (ПР3 ООП + ПР5 Django + ПР6 шаблоны + ПР7 SQLite + ПР9 ORM + ПР10 Admin)
+# Система организации музыкальных групп (ПР3 ООП + ПР5 Django + ПР6 шаблоны + ПР7 SQLite + ПР9 ORM + ПР10 Admin + ПР11 Forms)
 
 Консольное приложение для управления музыкальным коллективом:
 учет групп, оценка кандидатов, планирование репетиций,
@@ -191,26 +191,30 @@ http://127.0.0.1:8000/
   (отменённые/завершённые не блокируют дату)
   (view-функция `available_bands()`,
   шаблон `bands/available.html`);
-- `/rehearsals/` — список активных репетиций через ORM
-  (`Rehearsal.objects.active()`, `annotate` + `F` + `values`,
-  фильтры по дате/группе, поиск, сортировка из белого списка,
-  `Paginator` по 5, навигация с `{% querystring %}`)
+- `/rehearsals/` — список активных репетиций через форму
+  `RehearsalFilterForm` (GET: дата/группа/поиск/сортировка,
+  `cleaned_data` только после `is_valid()`),
+  `annotate` + `F` + `values`, белый список сортировки,
+  `Paginator` по 5, навигация с `{% querystring %}`;
+  кнопки «Создать», «Редактировать», отмена через POST-форму
   (view-функция `rehearsal_list()`,
   шаблон `rehearsals/rehearsal_list.html`);
+- `/rehearsals/create/` — создание репетиции (`RehearsalForm`,
+  `initial` с текущей датой, проверка прошлого и занятости,
+  `redirect` после сохранения);
+- `/rehearsals/<int:rehearsal_id>/edit/` — редактирование
+  (`instance=`, занятость без учёта себя через `exclude`);
+- `/rehearsals/<int:rehearsal_id>/cancel/` — отмена только POST
+  (`@require_POST`, `cancel()` → статус, без удаления;
+  повторная отмена — 404, GET — 405);
 - `/rehearsals/<int:rehearsal_id>/` — страница репетиции
-  (`select_related("band")`, шаблон обращается
-  к `rehearsal.band.name` и статусу через общий include)
-  (view-функция `rehearsal_detail()`,
-  шаблон `rehearsals/rehearsal_detail.html`);
-- `/rehearsals/statistics/` — статистика: число активных репетиций
-  по группам (`Count` + `Q(status=...)`) и сводные итоги
-  (`total/active/cancelled/completed` через `aggregate`,
-  средний состав через `Avg`)
-  (view-функция `statistics()`,
-  шаблон `rehearsals/statistics.html`).
-- `/admin/` — административная панель: группы, участники,
-  репетиции (списки, поиск, фильтры, сортировка, inline,
-  массовые действия, Debug Toolbar на страницах сайта).
+  (`select_related("band")`, ссылка «Редактировать»);
+- `/rehearsals/statistics/` — статистика по статусам
+  и по группам (см. ПР10);
+- `/bands/<slug:slug>/` — страница группы + загрузка фото
+  (`BandImageForm`, `enctype="multipart/form-data"`,
+  `request.FILES`, показ через `{{ band.image.url }}`);
+- `/admin/` — админка (см. ПР10): добавлено поле фото группы.
 
 Несуществующие объекты обрабатывает `get_object_or_404`
 (ответ 404). Несуществующие адреса
@@ -257,30 +261,27 @@ HTML вынесен из Python-кода в шаблоны, функция `page
 │   ├── asgi.py
 │   └── wsgi.py
 ├── templates/         # base.html + includes/navigation.html (ПР6)
-├── homepage/          # главная страница
-│   ├── views.py       # index(), page_not_found() через render()
-│   ├── urls.py        # app_name homepage, name index
-│   ├── templates/homepage/  # index.html, 404.html
-│   └── static/homepage/     # css/style.css, js/main.js, img/logo.png
-├── bands/             # группы (ПР9 модель, ПР10 admin/slug)
-│   ├── models.py      # Band: + slug, get_absolute_url(), save()
+├── bands/             # группы (ПР9 модель, ПР10 admin/slug, ПР11 фото)
+│   ├── models.py      # Band: + slug, get_absolute_url(), save(), image
 │   ├── context_processors.py  # band_context (ПР10)
+│   ├── forms.py       # BandImageForm (ПР11)
 │   ├── admin.py       # BandAdmin + MemberInline/RehearsalInline
-│   ├── views.py       # на ORM + status + slug-деталка
+│   ├── views.py       # на ORM + status + slug-деталка + фото (ПР11)
 │   ├── urls.py        # list/detail(slug)/available
-│   ├── migrations/    # 0001 (ПР9), 0002 slug, 0003 populate, 0004 unique
+│   ├── migrations/    # 0001 (ПР9), 0002–0004 slug (ПР10), 0005 image
 │   └── templates/bands/
 ├── members/           # участники (ПР9 модель, ПР10 admin/GeneratedField)
 │   ├── models.py      # Member: + is_experienced (GeneratedField)
 │   ├── admin.py       # MemberAdmin
 │   └── migrations/    # 0001 (ПР9), 0002 is_experienced
-├── rehearsals/        # репетиции (ПР9 модель, ПР10 admin/статусы)
+├── rehearsals/        # репетиции (формы ПР11, статусы ПР10)
 │   ├── models.py      # Rehearsal: status TextChoices + QuerySet/Manager
+│   ├── forms.py       # RehearsalFilterForm + RehearsalForm (ПР11)
 │   ├── admin.py       # RehearsalAdmin (действия, inline-поля)
-│   ├── views.py       # на ORM + active()/статусы
-│   ├── urls.py        # list/detail/statistics
-│   ├── migrations/    # 0001 (ПР9), 0002 status, 0003 данные, 0004 -флаг
-│   └── templates/rehearsals/
+│   ├── views.py       # CRUD через формы + ORM (ПР11)
+│   ├── urls.py        # list/create/statistics/edit/cancel/detail
+│   ├── migrations/    # 0001 (ПР9), 0002–0004 статусы (ПР10)
+│   └── templates/rehearsals/  # + rehearsal_form.html (ПР11)
 ├── models/            # классы ПР3 (консольный слой, без изменений)
 ├── db/                # SQLite-слой ПР7 + import_sqlite_to_orm.py (ПР9/10)
 ├── sql/               # schema.sql, queries.sql (ПР7, исторический слой)
@@ -424,6 +425,34 @@ python manage.py runserver
   и учётные записи админки нужны для защиты без перенастройки
   (новые `*.sqlite3` в `.gitignore`).
 
+## Формы Django (ПР11)
+
+- `RehearsalFilterForm` (`rehearsals/forms.py`, `forms.Form`):
+  `date`/`band` (`ModelChoiceField`)/`q`/`sort` (`ChoiceField`),
+  всё `required=False`; форма связана через
+  `RehearsalFilterForm(request.GET or None)`, значения — только из
+  `cleaned_data` после `is_valid()`; невалидный ввод — сообщение
+  «Проверьте корректность параметров фильтрации» + ошибки полей,
+  фильтрация не применяется;
+- `RehearsalForm` (`forms.ModelForm`, `fields = ["band",
+  "rehearsal_date", "participants"]`, `labels`/`help_texts`/виджеты
+  Bootstrap): `clean_rehearsal_date()` запрещает прошлое
+  (`timezone.localdate()`), `clean()` запрещает дубль активной
+  репетиции (`exists()`, при редактировании — `exclude(pk=...)`);
+  статус задаёт сервер (`default=active`), в форме его нет;
+- представления: `rehearsal_create` (GET — пустая + `initial`,
+  POST — проверка → `save()` → `redirect`), `rehearsal_update`
+  (`instance=`), `rehearsal_cancel` (`@require_POST`,
+  только active, `cancel()`, повтор — 404);
+- шаблоны: общий `rehearsal_form.html` (create/update:
+  `{% csrf_token %}`, цикл полей, `field.errors`,
+  `form.non_field_errors`), кнопки в списке и деталке;
+- фото группы: `Band.image` (`ImageField`, `upload_to="bands/"`,
+  миграция `0005`, `Pillow`), `MEDIA_URL`/`MEDIA_ROOT` + `static()`
+  при `DEBUG` (`media/` в `.gitignore`), `BandImageForm` на странице
+  группы (`request.FILES`, показ `{{ band.image.url }}`), поле
+  доступно и в админке.
+
 ## Запуск тестов
 
 ```text
@@ -460,9 +489,9 @@ git add .
 git commit -m "PR7: add SQLite database and SQL queries"
 ```
 
-## Текущее состояние и план развития (ПР10)
+## Текущее состояние и план развития (ПР11)
 
-Реализовано (ПР5–ПР10):
+Реализовано (ПР5–ПР11):
 
 - Django-проект `bandly`, приложения
   (`homepage`, `bands`, `members`, `rehearsals`);
@@ -485,11 +514,12 @@ git commit -m "PR7: add SQLite database and SQL queries"
 - административная панель (ПР10): три `ModelAdmin`, inline,
   действия, локализация; статусы `TextChoices` + менеджер;
   `GeneratedField`, `slug` + `get_absolute_url`, контекстный
-  процессор, Debug Toolbar.
+  процессор, Debug Toolbar;
+- формы Django (ПР11): фильтр через `Form`, создание/редактирование
+  через `ModelForm`, отмена через POST, фото через `ImageField`.
 
-Планируется (ПР11 и далее):
+Планируется (далее):
 
-- формы создания и редактирования;
 - пользователи и API;
 - контейнеризация;
 - CI/CD.
