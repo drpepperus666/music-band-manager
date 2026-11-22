@@ -1,4 +1,4 @@
-"""Страницы репетиций: данные через Django ORM (ПР9)."""
+"""Страницы репетиций: данные через Django ORM (ПР9, ПР10 статусы)."""
 
 from datetime import datetime
 
@@ -24,7 +24,7 @@ def rehearsal_list(request):
     sort = request.GET.get("sort", "date")
     error = None
 
-    rehearsals_data = Rehearsal.objects.filter(is_cancelled=False)
+    rehearsals_data = Rehearsal.objects.active()
 
     if booking_date:
         try:
@@ -57,7 +57,7 @@ def rehearsal_list(request):
             "id",
             "rehearsal_date",
             "participants",
-            "is_cancelled",
+            "status",
             "band_name",
         )
         .order_by(sort_field, "id")
@@ -93,29 +93,49 @@ def rehearsal_detail(request, rehearsal_id):
 
 
 def statistics(request):
-    """Статистика: число активных репетиций по группам."""
+    """Статистика репетиций по статусам и по группам."""
     statistics_data = (
         Band.objects.annotate(
             rehearsals_count=Count(
                 "rehearsals",
-                filter=Q(rehearsals__is_cancelled=False),
+                filter=Q(
+                    rehearsals__status=Rehearsal.Status.ACTIVE,
+                ),
             ),
             band_name=F("name"),
         )
         .values("band_name", "rehearsals_count")
         .order_by("-rehearsals_count")
     )
-    active = Rehearsal.objects.filter(is_cancelled=False)
-    active_count = active.count()
-    avg_participants = active.aggregate(
-        avg_participants=Avg("participants"),
-    )["avg_participants"]
+    totals = Rehearsal.objects.aggregate(
+        total_rehearsals=Count("id"),
+        active_count=Count(
+            "id",
+            filter=Q(status=Rehearsal.Status.ACTIVE),
+        ),
+        cancelled_count=Count(
+            "id",
+            filter=Q(status=Rehearsal.Status.CANCELLED),
+        ),
+        completed_count=Count(
+            "id",
+            filter=Q(status=Rehearsal.Status.COMPLETED),
+        ),
+    )
+    avg_participants = (
+        Rehearsal.objects.active().aggregate(
+            avg_participants=Avg("participants"),
+        )["avg_participants"]
+    )
     return render(
         request,
         "rehearsals/statistics.html",
         {
             "statistics": statistics_data,
-            "active_count": active_count,
+            "active_count": totals["active_count"],
             "avg_participants": avg_participants,
+            "total_rehearsals": totals["total_rehearsals"],
+            "cancelled_count": totals["cancelled_count"],
+            "completed_count": totals["completed_count"],
         },
     )

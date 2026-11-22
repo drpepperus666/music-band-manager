@@ -14,7 +14,7 @@
  {% endif %}
  </p>
  <a
- href="{% url 'bands:detail' band.id %}"
+ href="{{ band.get_absolute_url }}"
  class="btn btn-primary"
  >
  Подробнее

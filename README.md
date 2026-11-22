@@ -1,4 +1,4 @@
-# Система организации музыкальных групп (ПР3 ООП + ПР5 Django + ПР6 шаблоны + ПР7 SQLite + ПР9 ORM)
+# Система организации музыкальных групп (ПР3 ООП + ПР5 Django + ПР6 шаблоны + ПР7 SQLite + ПР9 ORM + ПР10 Admin)
 
 Консольное приложение для управления музыкальным коллективом:
 учет групп, оценка кандидатов, планирование репетиций,
@@ -182,31 +182,35 @@ http://127.0.0.1:8000/
 - `/bands/` — список групп через ORM (`order_by("name")`)
   + поиск по названию/инструменту (`Q`, `icontains`)
   (view-функция `band_list()`, шаблон `bands/band_list.html`);
-- `/bands/<int:band_id>/` — страница группы через ORM
-  (`get_object_or_404`, `members.count()`, доступность
-  на текущую дату через `exists()`)
+- `/bands/<slug:slug>/` — страница группы через ORM
+  (`get_object_or_404(Band, slug=slug)`, `members.count()`,
+  доступность на текущую дату через `active().exists()`)
   (view-функция `band_detail()`, шаблон `bands/band_detail.html`);
 - `/bands/available/?date=YYYY-MM-DD` — поиск свободных групп
-  на дату, форма GET + `exclude(pk__in=...)` по активным репетициям
+  на дату, форма GET + `active()` и `exclude(pk__in=...)`
+  (отменённые/завершённые не блокируют дату)
   (view-функция `available_bands()`,
   шаблон `bands/available.html`);
 - `/rehearsals/` — список активных репетиций через ORM
-  (`annotate` + `F` + `values`, фильтры по дате/группе,
-  поиск, сортировка из белого списка, `Paginator` по 5,
-  навигация с `{% querystring %}`)
+  (`Rehearsal.objects.active()`, `annotate` + `F` + `values`,
+  фильтры по дате/группе, поиск, сортировка из белого списка,
+  `Paginator` по 5, навигация с `{% querystring %}`)
   (view-функция `rehearsal_list()`,
   шаблон `rehearsals/rehearsal_list.html`);
 - `/rehearsals/<int:rehearsal_id>/` — страница репетиции
   (`select_related("band")`, шаблон обращается
-  к `rehearsal.band.name`)
+  к `rehearsal.band.name` и статусу через общий include)
   (view-функция `rehearsal_detail()`,
   шаблон `rehearsals/rehearsal_detail.html`);
 - `/rehearsals/statistics/` — статистика: число активных репетиций
-  по группам (`Count` + `Q`, `LEFT JOIN`-семантика от `Band`,
-  плюс `active_count` через `count()` и средний состав
-  через `aggregate(Avg(...))`)
+  по группам (`Count` + `Q(status=...)`) и сводные итоги
+  (`total/active/cancelled/completed` через `aggregate`,
+  средний состав через `Avg`)
   (view-функция `statistics()`,
   шаблон `rehearsals/statistics.html`).
+- `/admin/` — административная панель: группы, участники,
+  репетиции (списки, поиск, фильтры, сортировка, inline,
+  массовые действия, Debug Toolbar на страницах сайта).
 
 Несуществующие объекты обрабатывает `get_object_or_404`
 (ответ 404). Несуществующие адреса
@@ -365,6 +369,51 @@ python manage.py runserver
 `aggregate(Avg)`, `annotate(Count(..., filter=Q(...)))`,
 `Paginator.get_page` + `{% querystring %}` (пагинация по 5
 с сохранением фильтров).
+
+## Административная панель и развитие ORM (ПР10)
+
+Суперпользователь: `python manage.py createsuperuser`
+(вход — `/admin/`). Тестовая группа «Bandly Operators»
+(просмотр/создание/изменение групп без удаления) и пользователь
+`operator` созданы для проверки разрешений.
+
+- `BandAdmin`: столбцы (`rehearsals_count` через `annotate` +
+  `Count(filter=Q(status=...))`, `site_link` через
+  `get_absolute_url`), поиск, фильтр `is_active`, сортировка,
+  `list_editable = ("is_active",)`, `readonly_fields = ("id",)`,
+  inline участников и репетиций, `view_on_site`;
+- `MemberAdmin`: столбцы (включая вычисляемое `is_experienced`),
+  поиск по инструменту/статусу/группе, фильтр, `list_editable`
+  для стажа, сортировка по стажу;
+- `RehearsalAdmin`: столбец инструмента группы (`ordering`
+  по связанному полю), поиск `band__name`, фильтры дата/статус,
+  `list_select_related = ("band",)`, `date_hierarchy`,
+  `autocomplete_fields`, действия «Отменить»/«Вернуть в активные».
+- Русская локализация: `AppConfig.verbose_name` («Группы»,
+  «Участники», «Репетиции»), `verbose_name` моделей и полей,
+  `help_text` у подсказок.
+
+Развитие моделей:
+
+- `Rehearsal.status` — `TextChoices` (`active/cancelled/completed`)
+  вместо `is_cancelled` (удалён миграцией `0004`);
+  перенос значений — миграция данных `0003_migrate_statuses`;
+  метод `cancel()` переводит в `cancelled`;
+- `RehearsalQuerySet`/`RehearsalManager`: `active()`, `cancelled()`,
+  `completed()`, `for_date()`; представления используют
+  `Rehearsal.objects.active()`;
+- `Member.is_experienced` — `GeneratedField` (`experience_years >= 3`,
+  `db_persist=True`), пересчёт на стороне базы;
+- `Band.slug` — `SlugField(unique)` из транслитерации названия + `pk`
+  (`Unidecode` + `slugify`, миграция данных `0003_populate_slugs`,
+  автосоздание в `save()`); деталка — `<slug:slug>/`,
+  ссылки — `{{ band.get_absolute_url }}`;
+- контекстный процессор `bands.context_processors.band_context`
+  (`site_name`, `bands_count`) — счётчик групп в навигации;
+- Django Debug Toolbar (`debug_toolbar`, `INTERNAL_IPS`,
+  маршрут `__debug__/` при `DEBUG`): вкладка SQL подтверждает
+  один запрос списка (`annotate` + `F` + `values`) и JOIN
+  в деталке (`select_related`).
 
 ## Запуск тестов
 

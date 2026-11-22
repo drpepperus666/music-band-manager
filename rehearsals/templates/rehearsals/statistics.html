@@ -4,12 +4,15 @@
 {% endblock %}
 {% block content %}
  <h1>Статистика репетиций</h1>
+ <p>Всего репетиций: {{ total_rehearsals }}</p>
  <p>Активных репетиций: {{ active_count }}</p>
+ <p>Отменённых: {{ cancelled_count }}</p>
+ <p>Завершённых: {{ completed_count }}</p>
  <p>Среднее число участников: {{ avg_participants|default:"—" }}</p>
  {% for item in statistics %}
  <article class="statistics-item">
   <h2>{{ item.band_name }}</h2>
-  <p>Количество репетиций: {{ item.rehearsals_count }}</p>
+  <p>Активных репетиций: {{ item.rehearsals_count }}</p>
  </article>
  {% empty %}
  <p>Данные отсутствуют.</p>

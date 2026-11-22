@@ -1,4 +1,4 @@
-"""Страницы групп: данные через Django ORM (ПР9)."""
+"""Страницы групп: данные через Django ORM (ПР9, ПР10 slug)."""
 
 from datetime import date, datetime
 
@@ -25,13 +25,12 @@ def band_list(request):
     return render(request, "bands/band_list.html", context)
 
 
-def band_detail(request, band_id):
+def band_detail(request, slug):
     """Страница группы из ORM, 404 если не найдена."""
-    band = get_object_or_404(Band, pk=band_id)
+    band = get_object_or_404(Band, slug=slug)
     members_count = band.members.count()
-    busy = band.rehearsals.filter(
+    busy = band.rehearsals.active().filter(
         rehearsal_date=date.today(),
-        is_cancelled=False,
     ).exists()
     context = {
         "band": band,
@@ -55,9 +54,8 @@ def available_bands(request):
         except ValueError:
             error = "Укажите корректную дату."
         else:
-            busy_ids = Rehearsal.objects.filter(
+            busy_ids = Rehearsal.objects.active().filter(
                 rehearsal_date=selected_date,
-                is_cancelled=False,
             ).values_list("band_id", flat=True)
             bands_list = Band.objects.exclude(
                 pk__in=busy_ids,
