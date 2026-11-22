@@ -8,21 +8,19 @@
 {% endblock %}
 {% block content %}
  {% if band %}
- <div class="card">
- <div class="card-body">
- <h1 class="card-title">
+ <h1>
  {{ band.name|default:"Без названия" }}
  </h1>
- <p class="card-text">
+ <p>
  <strong>ID:</strong> {{ band.id }}
  </p>
- <p class="card-text">
+ <p>
  <strong>Основана:</strong> {{ band.foundation_date }}
  </p>
- <p class="card-text">
+ <p>
  <strong>Инструмент:</strong> {{ band.required_instrument }}
  </p>
- <p class="card-text">
+ <p>
  <strong>Статус:</strong>
  {% if band.is_active %}
  Активна
@@ -30,17 +28,17 @@
  Неактивна
  {% endif %}
  </p>
- <p class="card-text">
+ <p>
  <strong>Участников:</strong> {{ members_count }}
  </p>
  {% if band.image %}
- <p class="card-text">
+ <p>
  <img src="{{ band.image.url }}" alt="{{ band.name }}" class="img-fluid" style="max-width: 400px;">
  </p>
  {% else %}
- <p class="card-text">Фото не загружено.</p>
+ <p>Фото не загружено.</p>
  {% endif %}
- <form method="post" enctype="multipart/form-data" class="mb-3">
+ <form method="post" enctype="multipart/form-data" class="photo-form">
  {% csrf_token %}
  {{ photo_form.image.label_tag }}
  {{ photo_form.image }}
@@ -49,7 +47,7 @@
  {% endfor %}
  <button type="submit" class="btn btn-primary btn-sm">Загрузить фото</button>
  </form>
- <p class="card-text">
+ <p>
  Доступность на текущую дату:
  {% if available %}
  <span class="badge bg-success">
@@ -61,8 +59,6 @@
  </span>
  {% endif %}
  </p>
- </div>
- </div>
  {% else %}
  <h1 class="text-danger">
  Группа не найдена

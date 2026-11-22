@@ -412,3 +412,21 @@ form .btn + a {
  font-weight: 700;
  margin-left: 3px;
 }
+
+/* Форма загрузки фото: воздух вокруг */
+.photo-form {
+ display: flex;
+ flex-direction: column;
+ align-items: flex-start;
+ gap: 0.7rem;
+ margin: 1.25rem 0;
+ padding: 1rem 1.25rem;
+ background: rgba(255, 255, 255, 0.04);
+ border: 1px solid var(--bandly-border);
+ border-radius: 14px;
+ max-width: 560px;
+}
+
+.photo-form .form-control {
+ width: 100%;
+}
