@@ -14,7 +14,7 @@
 Музыкальная индустрия, организация репетиционного процесса
 и базовый менеджмент музыкальных коллективов.
 
-## Основные классы
+## Основные классы (консольный слой ПР3, сохранён без изменений)
 
 ### Band — группа (`models/band.py`)
 
@@ -109,7 +109,7 @@
 - `utils.py` — ввод (`input_int`, `input_float`,
   `input_date`, `input_string`)
 - `data/` — `bands.json`, `members.json`, `rehearsals.json`
-  (репетиции хранят `is_cancelled`)
+  (репетиции хранят `is_cancelled`; консольный слой ПР3)
 - `tests/` — 47 тестов: `test_bands.py`, `test_members.py`,
   `test_rehearsals.py`, `test_storage.py`, `test_room.py`
 - `pytest.ini`, `requirements.txt`, `.flake8`
@@ -227,17 +227,18 @@ HTML вынесен из Python-кода в шаблоны, функция `page
   блоки `title`/`content`, подвал с годом через `main.js`;
 - навигация `templates/includes/navigation.html` подключена через
   `{% include %}`, ссылки через `{% url %}`
-  (`homepage:index`, `bands:list`, `bands:detail`, `bands:available`,
-  `rehearsals:list`, `rehearsals:detail`, `rehearsals:statistics`);
+  (`homepage:index`, `bands:list`,
+  `rehearsals:list`, `rehearsals:statistics`);
+  ссылки на деталки — в карточках через `get_absolute_url`;
 - пространства имен: `app_name` в `homepage/urls.py`,
   `bands/urls.py`, `rehearsals/urls.py`;
 - карточка группы `bands/includes/band_card.html`,
   статус репетиции `rehearsals/includes/rehearsal_status.html`
   подключены через `{% include %}`;
 - списки — цикл `{% for %}` с `{% empty %}`,
-  состояния — `{% if %}` (`is_active`, `is_cancelled`,
+  состояния — `{% if %}` (`is_active`, `status`,
   `available`, наличие объекта);
-- фильтры: `{{ bands|length }}`, `{{ rehearsals|length }}`,
+- фильтры: `{{ bands|length }}`, `{{ page_obj.paginator.count }}`,
   `{{ band.name|default:"Без названия" }}`;
 - статика `homepage/static/homepage/`: `css/style.css`
   (стили `.band-card`, `.rehearsal-status`, `.bandly-logo`),
@@ -343,10 +344,11 @@ wsl ./venv/bin/python -m db.import_json
 - `Member` (`members/models.py`): `band = ForeignKey(Band,
   CASCADE, related_name="members")`, `instrument`,
   `experience_years`, `status`;
-- `Rehearsal` (`rehearsals/models.py`): `band = ForeignKey(Band,
-  PROTECT, related_name="rehearsals")`, `rehearsal_date`
-  (`DateField`), `participants`, `is_cancelled`;
-  метод `cancel()` (флаг + `save(update_fields=...)`).
+- `Rehearsal` (`rehearsals/models.py`, с ПР10 — `status` вместо флага):
+  `band = ForeignKey(Band, PROTECT, related_name="rehearsals")`,
+  `rehearsal_date` (`DateField`), `participants`,
+  `status` (`TextChoices`: `active/cancelled/completed`);
+  метод `cancel()` (перевод в `cancelled` + `save(update_fields=...)`).
 
 Порядок работы с нуля:
 
@@ -418,6 +420,9 @@ python manage.py runserver
   маршрут `__debug__/` при `DEBUG`): вкладка SQL подтверждает
   один запрос списка (`annotate` + `F` + `values`) и JOIN
   в деталке (`select_related`).
+- `db.sqlite3` закоммичена осознанно: демо-данные, миграции
+  и учётные записи админки нужны для защиты без перенастройки
+  (новые `*.sqlite3` в `.gitignore`).
 
 ## Запуск тестов
 
@@ -455,12 +460,12 @@ git add .
 git commit -m "PR7: add SQLite database and SQL queries"
 ```
 
-## Текущее состояние и план развития (ПР7)
+## Текущее состояние и план развития (ПР10)
 
-Реализовано:
+Реализовано (ПР5–ПР10):
 
-- Django-проект `bandly` и три приложения
-  (`homepage`, `bands`, `rehearsals`);
+- Django-проект `bandly`, приложения
+  (`homepage`, `bands`, `members`, `rehearsals`);
 - маршрутизация URL двух уровней (`include()`),
   именованные маршруты и пространства имен;
 - view-функции через `render()` и страницы-шаблоны
@@ -471,25 +476,19 @@ git commit -m "PR7: add SQLite database and SQL queries"
 - контекст, циклы `{% for %}` с `{% empty %}`, условия `{% if %}`;
 - фильтры `length`, `default`;
 - собственные статические файлы (CSS, JS, логотип) + Bootstrap 5.3;
-- динамические URL `<int:band_id>`, `<int:rehearsal_id>`;
-- обработка 404 (ветка «не найдено» + `handler404`);
-- консольное приложение ПР3 сохранено: логика
-  (`load_bands`, `find_band_by_id`, `is_band_available`,
-  `find_rehearsal_by_id`, подсчет участников) работает в `main.py`;
-  веб-слой получает данные из SQLite через `get_connection()`;
-- навигация между страницами через `{% url %}`
-  (Главная, Группы, Репетиции, Статистика);
-- слой SQLite: `data/bands.sqlite`, `sql/schema.sql`,
-  `db/database.py`, `db/import_json.py`, 12 запросов
-  в `sql/queries.sql` (списки, `WHERE`, `JOIN`, `COUNT`/`AVG`,
-  `GROUP BY`, `HAVING`, подзапрос `NOT IN`);
-- страницы на данных из SQLite: список групп, список репетиций,
-  поиск свободных групп по дате (параметризованный запрос),
-  статистика по группам; `sqlite3.Row` + `context` + шаблоны.
+- динамические URL `<slug:slug>` (группы), `<int:rehearsal_id>`;
+- обработка 404 (`get_object_or_404` + `handler404`);
+- консольное приложение ПР3 сохранено без изменений;
+- слой SQLite ПР7 сохранён как исторический (`sql/`, `db/database.py`);
+- слой Django ORM (ПР9): модели, миграции, перенос данных,
+  фильтры/сортировка/пагинация в представлениях;
+- административная панель (ПР10): три `ModelAdmin`, inline,
+  действия, локализация; статусы `TextChoices` + менеджер;
+  `GeneratedField`, `slug` + `get_absolute_url`, контекстный
+  процессор, Debug Toolbar.
 
-Планируется:
+Планируется (ПР11 и далее):
 
-- перенос сущностей в Django ORM;
 - формы создания и редактирования;
 - пользователи и API;
 - контейнеризация;

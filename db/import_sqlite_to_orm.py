@@ -79,7 +79,7 @@ ORDER BY id
                     },
                 )
             for row in rehearsals:
-                Rehearsal.objects.update_or_create(
+                rehearsal, created = Rehearsal.objects.update_or_create(
                     pk=row["id"],
                     defaults={
                         "band_id": row["band_id"],
@@ -87,13 +87,15 @@ ORDER BY id
                             row["rehearsal_date"]
                         ),
                         "participants": row["participants"],
-                        "status": (
-                            Rehearsal.Status.CANCELLED
-                            if row["is_cancelled"]
-                            else Rehearsal.Status.ACTIVE
-                        ),
                     },
                 )
+                if created:
+                    rehearsal.status = (
+                        Rehearsal.Status.CANCELLED
+                        if row["is_cancelled"]
+                        else Rehearsal.Status.ACTIVE
+                    )
+                    rehearsal.save(update_fields=["status"])
     print("Перенос данных завершён.")
     print(f"Групп: {Band.objects.count()}")
     print(f"Участников: {Member.objects.count()}")

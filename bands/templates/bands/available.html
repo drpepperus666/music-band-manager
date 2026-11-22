@@ -22,7 +22,7 @@
  {% for band in bands %}
  <article class="card band-card mb-3">
   <div class="card-body">
-   <h3>{{ band.name }}</h3>
+   <h3><a href="{{ band.get_absolute_url }}">{{ band.name }}</a></h3>
    <p>Инструмент: {{ band.required_instrument }}</p>
   </div>
  </article>

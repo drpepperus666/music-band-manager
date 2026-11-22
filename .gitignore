@@ -19,3 +19,6 @@ Thumbs.db
 .pytest_cache/
 .coverage
 htmlcov/
+
+# SQLite (db.sqlite3 уже в репозитории осознанно — демо-данные для защиты)
+*.sqlite3

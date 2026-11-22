@@ -9,8 +9,10 @@ def migrate_statuses(apps, schema_editor):
         status="cancelled",
     )
 
-
 def reverse_statuses(apps, schema_editor):
+    # Обратный перенос необратим для completed: в is_cancelled
+    # различаются только два состояния, completed станет active
+    # при повторном прямом переносе. Для учебных данных допустимо.
     Rehearsal = apps.get_model("rehearsals", "Rehearsal")
     Rehearsal.objects.filter(status="cancelled").update(
         is_cancelled=True,

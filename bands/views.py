@@ -54,9 +54,11 @@ def available_bands(request):
         except ValueError:
             error = "Укажите корректную дату."
         else:
-            busy_ids = Rehearsal.objects.active().filter(
-                rehearsal_date=selected_date,
-            ).values_list("band_id", flat=True)
+            busy_ids = (
+                Rehearsal.objects.active()
+                .for_date(selected_date)
+                .values_list("band_id", flat=True)
+            )
             bands_list = Band.objects.exclude(
                 pk__in=busy_ids,
             ).order_by("name")
