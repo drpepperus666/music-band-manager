@@ -1,90 +1,122 @@
-"""Страницы репетиций: данные из SQLite (ПР7)."""
+"""Страницы репетиций: данные через Django ORM (ПР9)."""
 
-from django.shortcuts import render
+from datetime import datetime
 
-from db.database import get_connection
+from django.core.paginator import Paginator
+from django.db.models import Avg, Count, F, Q
+from django.shortcuts import get_object_or_404, render
+
+from bands.models import Band
+from rehearsals.models import Rehearsal
+
+SORT_FIELDS = {
+    "date": "rehearsal_date",
+    "band": "band__name",
+    "participants": "participants",
+}
 
 
 def rehearsal_list(request):
-    """Список активных репетиций (JOIN bands)."""
-    conn = get_connection()
-    try:
-        rehearsals_list = conn.execute(
-            """
-SELECT
-rehearsals.id,
-rehearsals.rehearsal_date,
-rehearsals.participants,
-rehearsals.is_cancelled,
-bands.name AS band_name
-FROM rehearsals
-JOIN bands
-ON rehearsals.band_id = bands.id
-WHERE rehearsals.is_cancelled = 0
-ORDER BY rehearsals.rehearsal_date;
-"""
-        ).fetchall()
-    finally:
-        conn.close()
+    """Список активных репетиций: фильтры, поиск, сортировка, пагинация."""
+    booking_date = request.GET.get("date", "").strip()
+    band_id = request.GET.get("band", "").strip()
+    query = request.GET.get("q", "").strip()
+    sort = request.GET.get("sort", "date")
+    error = None
+
+    rehearsals_data = Rehearsal.objects.filter(is_cancelled=False)
+
+    if booking_date:
+        try:
+            selected_date = datetime.strptime(
+                booking_date,
+                "%Y-%m-%d",
+            ).date()
+        except ValueError:
+            error = "Укажите корректную дату."
+        else:
+            rehearsals_data = rehearsals_data.filter(
+                rehearsal_date=selected_date,
+            )
+    if band_id.isdigit():
+        rehearsals_data = rehearsals_data.filter(
+            band_id=int(band_id),
+        )
+    if query:
+        rehearsals_data = rehearsals_data.filter(
+            Q(band__name__icontains=query)
+            | Q(band__required_instrument__icontains=query),
+        )
+
+    sort_field = SORT_FIELDS.get(sort, "rehearsal_date")
+    rehearsals_data = (
+        rehearsals_data.annotate(
+            band_name=F("band__name"),
+        )
+        .values(
+            "id",
+            "rehearsal_date",
+            "participants",
+            "is_cancelled",
+            "band_name",
+        )
+        .order_by(sort_field, "id")
+    )
+
+    paginator = Paginator(rehearsals_data, 5)
+    page_obj = paginator.get_page(request.GET.get("page"))
+
     context = {
-        "rehearsals": rehearsals_list,
+        "bookings": page_obj,
+        "rehearsals": page_obj,
+        "page_obj": page_obj,
+        "booking_date": booking_date,
+        "selected_band": band_id,
+        "query": query,
+        "sort": sort,
+        "bands": Band.objects.order_by("name"),
+        "error": error,
     }
     return render(request, "rehearsals/rehearsal_list.html", context)
 
 
 def rehearsal_detail(request, rehearsal_id):
-    """Страница репетиции из SQLite, 404 если не найдена."""
-    conn = get_connection()
-    try:
-        rehearsal = conn.execute(
-            """
-SELECT
-rehearsals.id,
-rehearsals.rehearsal_date,
-rehearsals.participants,
-rehearsals.is_cancelled,
-bands.name AS band_name
-FROM rehearsals
-JOIN bands
-ON rehearsals.band_id = bands.id
-WHERE rehearsals.id = ?;
-""",
-            [rehearsal_id],
-        ).fetchone()
-    finally:
-        conn.close()
-    context = {
-        "rehearsal": rehearsal,
-    }
+    """Страница репетиции из ORM, 404 если не найдена."""
+    rehearsal = get_object_or_404(
+        Rehearsal.objects.select_related("band"),
+        pk=rehearsal_id,
+    )
     return render(
         request,
         "rehearsals/rehearsal_detail.html",
-        context,
-        status=404 if rehearsal is None else 200,
+        {"rehearsal": rehearsal},
     )
 
 
 def statistics(request):
-    """Статистика: количество репетиций по группам."""
-    conn = get_connection()
-    try:
-        statistics_data = conn.execute(
-            """
-SELECT
-bands.name AS band_name,
-COUNT(rehearsals.id) AS rehearsals_count
-FROM bands
-LEFT JOIN rehearsals
-ON bands.id = rehearsals.band_id
-AND rehearsals.is_cancelled = 0
-GROUP BY bands.id, bands.name
-ORDER BY rehearsals_count DESC;
-"""
-        ).fetchall()
-    finally:
-        conn.close()
+    """Статистика: число активных репетиций по группам."""
+    statistics_data = (
+        Band.objects.annotate(
+            rehearsals_count=Count(
+                "rehearsals",
+                filter=Q(rehearsals__is_cancelled=False),
+            ),
+            band_name=F("name"),
+        )
+        .values("band_name", "rehearsals_count")
+        .order_by("-rehearsals_count")
+    )
+    active = Rehearsal.objects.filter(is_cancelled=False)
+    active_count = active.count()
+    avg_participants = active.aggregate(
+        avg_participants=Avg("participants"),
+    )["avg_participants"]
     return render(
         request,
         "rehearsals/statistics.html",
-        {"statistics": statistics_data},
+        {
+            "statistics": statistics_data,
+            "active_count": active_count,
+            "avg_participants": avg_participants,
+        },
     )

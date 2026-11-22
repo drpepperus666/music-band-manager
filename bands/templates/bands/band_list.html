@@ -4,6 +4,12 @@
 {% endblock %}
 {% block content %}
  <h1>Группы</h1>
+ <form method="get" class="mb-3">
+  <label for="q">Поиск:</label>
+  <input type="text" id="q" name="q" value="{{ query }}" placeholder="Название или инструмент">
+  <button type="submit">Найти</button>
+  {% if query %}<a href="{% url 'bands:list' %}">Сбросить</a>{% endif %}
+ </form>
  <p>
  Всего групп: {{ bands|length }}
  </p>
@@ -14,13 +20,13 @@
  </p>
  <ul class="list-group">
  {% for band in bands %}
- <li class="list-group-item">
- {% include "bands/includes/band_card.html" %}
- </li>
+  <li class="list-group-item">
+   {% include "bands/includes/band_card.html" %}
+  </li>
  {% empty %}
- <li class="list-group-item">
- Группы не найдены.
- </li>
+  <li class="list-group-item">
+   Группы не найдены.
+  </li>
  {% endfor %}
  </ul>
 {% endblock %}

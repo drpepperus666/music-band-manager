@@ -1,4 +1,4 @@
-# Система организации музыкальных групп (ПР3 ООП + ПР5 Django + ПР6 шаблоны + ПР7 SQLite)
+# Система организации музыкальных групп (ПР3 ООП + ПР5 Django + ПР6 шаблоны + ПР7 SQLite + ПР9 ORM)
 
 Консольное приложение для управления музыкальным коллективом:
 учет групп, оценка кандидатов, планирование репетиций,
@@ -175,32 +175,41 @@ wsl ./venv/bin/python manage.py runserver
 http://127.0.0.1:8000/
 ```
 
-## Страницы веб-интерфейса (ПР5–ПР7)
+## Страницы веб-интерфейса (ПР5–ПР9)
 
 - `/` — главная страница: описание приложения и навигация
   (view-функция `index()`, шаблон `homepage/index.html`);
-- `/bands/` — список групп из SQLite
+- `/bands/` — список групп через ORM (`order_by("name")`)
+  + поиск по названию/инструменту (`Q`, `icontains`)
   (view-функция `band_list()`, шаблон `bands/band_list.html`);
-- `/bands/<int:band_id>/` — страница группы из SQLite, доступность
-  на текущую дату SQL-запросом
+- `/bands/<int:band_id>/` — страница группы через ORM
+  (`get_object_or_404`, `members.count()`, доступность
+  на текущую дату через `exists()`)
   (view-функция `band_detail()`, шаблон `bands/band_detail.html`);
 - `/bands/available/?date=YYYY-MM-DD` — поиск свободных групп
-  на дату, форма GET + параметризованный запрос с `NOT IN`
+  на дату, форма GET + `exclude(pk__in=...)` по активным репетициям
   (view-функция `available_bands()`,
   шаблон `bands/available.html`);
-- `/rehearsals/` — список активных репетиций из SQLite (`JOIN`)
+- `/rehearsals/` — список активных репетиций через ORM
+  (`annotate` + `F` + `values`, фильтры по дате/группе,
+  поиск, сортировка из белого списка, `Paginator` по 5,
+  навигация с `{% querystring %}`)
   (view-функция `rehearsal_list()`,
   шаблон `rehearsals/rehearsal_list.html`);
-- `/rehearsals/<int:rehearsal_id>/` — страница репетиции из SQLite
+- `/rehearsals/<int:rehearsal_id>/` — страница репетиции
+  (`select_related("band")`, шаблон обращается
+  к `rehearsal.band.name`)
   (view-функция `rehearsal_detail()`,
   шаблон `rehearsals/rehearsal_detail.html`);
-- `/rehearsals/statistics/` — статистика: число репетиций
-  по группам (`LEFT JOIN` + `GROUP BY`)
+- `/rehearsals/statistics/` — статистика: число активных репетиций
+  по группам (`Count` + `Q`, `LEFT JOIN`-семантика от `Band`,
+  плюс `active_count` через `count()` и средний состав
+  через `aggregate(Avg(...))`)
   (view-функция `statistics()`,
   шаблон `rehearsals/statistics.html`).
 
-Если группа или репетиция с указанным идентификатором не найдена,
-страница возвращает код статуса 404. Несуществующие адреса
+Несуществующие объекты обрабатывает `get_object_or_404`
+(ответ 404). Несуществующие адреса
 обрабатывает `handler404` (`homepage.views.page_not_found`,
 шаблон `homepage/404.html`).
 
@@ -231,14 +240,14 @@ HTML вынесен из Python-кода в шаблоны, функция `page
   `js/main.js` (текущий год в подвале), `img/logo.png`;
   подключение через `{% load static %}` и `{% static %}`.
 
-## Структура Django-проекта (ПР5–ПР7)
+## Структура Django-проекта (ПР5–ПР9)
 
 ```text
 .
 ├── manage.py
 ├── bandly/            # конфигурация Django-проекта
 │   ├── settings.py    # ru-RU, Europe/Moscow, DIRS templates/
-│   ├── urls.py        # include() трех приложений + handler404
+│   ├── urls.py        # include() приложений + handler404
 │   ├── asgi.py
 │   └── wsgi.py
 ├── templates/         # base.html + includes/navigation.html (ПР6)
@@ -247,20 +256,30 @@ HTML вынесен из Python-кода в шаблоны, функция `page
 │   ├── urls.py        # app_name homepage, name index
 │   ├── templates/homepage/  # index.html, 404.html
 │   └── static/homepage/     # css/style.css, js/main.js, img/logo.png
-├── bands/             # группы
-│   ├── views.py       # band_list(), band_detail(), available_bands()
+├── bands/             # группы (ПР9: модель Band)
+│   ├── models.py      # Band: name, foundation_date,
+│   │                   # required_instrument, is_active
+│   ├── views.py       # band_list/detail(), available_bands() на ORM
 │   ├── urls.py        # app_name bands, names list/detail/available
+│   ├── migrations/    # 0001_initial (ПР9)
 │   └── templates/bands/     # band_list/detail/available
 │       └── includes/band_card.html
-├── rehearsals/        # репетиции
-│   ├── views.py       # rehearsal_list/detail(), statistics()
+├── members/           # участники (ПР9: модель Member)
+│   ├── models.py      # Member: band FK(CASCADE), instrument,
+│   │                   # experience_years, status
+│   └── migrations/    # 0001_initial (ПР9)
+├── rehearsals/        # репетиции (ПР9: модель Rehearsal)
+│   ├── models.py      # Rehearsal: band FK(PROTECT), rehearsal_date,
+│   │                   # participants, is_cancelled + cancel()
+│   ├── views.py       # rehearsal_list/detail(), statistics() на ORM
 │   ├── urls.py        # app_name rehearsals, names list/detail/statistics
+│   ├── migrations/    # 0001_initial (ПР9)
 │   └── templates/rehearsals/  # list/detail/statistics
 │       └── includes/rehearsal_status.html
 ├── models/            # классы ПР3 (Band, Member, Rehearsal, Room)
-├── db/                # SQLite-слой ПР7: database.py, import_json.py
+├── db/                # SQLite-слой ПР7 + import_sqlite_to_orm.py (ПР9)
 ├── sql/               # schema.sql, queries.sql (12 запросов) (ПР7)
-├── data/              # JSON ПР3 + bands.sqlite (ПР7)
+├── data/              # JSON ПР3 + bands.sqlite (ПР7, источник переноса)
 └── tests/             # 47 тестов ПР3
 ```
 
@@ -299,6 +318,53 @@ wsl ./venv/bin/python -m db.import_json
 фильтрация групп (`HAVING`), подзапрос свободных групп
 (`NOT IN`). Значения передаются только параметрами `?`,
 конкатенация строк и f-строки для SQL запрещены.
+
+## Слой Django ORM (ПР9)
+
+Представления больше не используют `sqlite3` напрямую:
+данные идут по цепочке
+представление → Django ORM → SQLite → объекты моделей.
+Файлы `sql/` и `db/database.py` сохранены как реализация ПР7,
+источником переноса служит `data/bands.sqlite`,
+рабочая база Django — `db.sqlite3` (`DATABASES` не менялась).
+
+Модели (`Meta.ordering`, русская `verbose_name`, `__str__`):
+
+- `Band` (`bands/models.py`): `name`, `foundation_date`
+  (`DateField`), `required_instrument`, `is_active`;
+- `Member` (`members/models.py`): `band = ForeignKey(Band,
+  CASCADE, related_name="members")`, `instrument`,
+  `experience_years`, `status`;
+- `Rehearsal` (`rehearsals/models.py`): `band = ForeignKey(Band,
+  PROTECT, related_name="rehearsals")`, `rehearsal_date`
+  (`DateField`), `participants`, `is_cancelled`;
+  метод `cancel()` (флаг + `save(update_fields=...)`).
+
+Порядок работы с нуля:
+
+```text
+python manage.py makemigrations bands members rehearsals
+python manage.py migrate
+python db/import_sqlite_to_orm.py
+python manage.py runserver
+```
+
+Скрипт `db/import_sqlite_to_orm.py` читает `data/bands.sqlite`
+и переносит записи через `update_or_create` с сохранением `id`
+(группы → участники → репетиции, одна транзакция
+`transaction.atomic()`, строки дат — через `date.fromisoformat`,
+флаги `0/1` — в `bool`). Проверка: 2 группы, 1 участник,
+1 репетиция; `Rehearsal.objects.select_related("band")`
+возвращает связанную группу.
+
+Ключевые ORM-приемы во views (всего >15 выражений):
+`all/order_by`, `get_object_or_404`, `filter` (в т.ч. по `band_id`
+и `band__name`), `exclude(pk__in=...)`, `Q` + `icontains` (поиск),
+белый список полей для `order_by` (сортировка), `annotate` + `F`
++ `values` / `values_list`, `select_related`, `count`,
+`aggregate(Avg)`, `annotate(Count(..., filter=Q(...)))`,
+`Paginator.get_page` + `{% querystring %}` (пагинация по 5
+с сохранением фильтров).
 
 ## Запуск тестов
 

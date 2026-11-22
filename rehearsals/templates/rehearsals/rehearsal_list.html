@@ -4,21 +4,84 @@
 {% endblock %}
 {% block content %}
  <h1>Репетиции</h1>
+ <form method="get" class="mb-4">
+  <div class="row g-3 align-items-end">
+   <div class="col-md-3">
+    <label for="date" class="form-label">Дата репетиции</label>
+    <input type="date" id="date" name="date" class="form-control" value="{{ booking_date }}">
+   </div>
+   <div class="col-md-3">
+    <label for="band" class="form-label">Группа</label>
+    <select id="band" name="band" class="form-select">
+     <option value="">Все группы</option>
+     {% for band in bands %}
+     <option value="{{ band.pk }}"{% if selected_band == band.pk|stringformat:"s" %} selected{% endif %}>{{ band.name }}</option>
+     {% endfor %}
+    </select>
+   </div>
+   <div class="col-md-3">
+    <label for="q" class="form-label">Поиск</label>
+    <input type="text" id="q" name="q" class="form-control" value="{{ query }}" placeholder="Название или инструмент">
+   </div>
+   <div class="col-md-3">
+    <label for="sort" class="form-label">Сортировать по</label>
+    <select id="sort" name="sort" class="form-select">
+     <option value="date"{% if sort == "date" %} selected{% endif %}>Дате</option>
+     <option value="band"{% if sort == "band" %} selected{% endif %}>Группе</option>
+     <option value="participants"{% if sort == "participants" %} selected{% endif %}>Участникам</option>
+    </select>
+   </div>
+   <div class="col-md-3">
+    <button type="submit" class="btn btn-primary">Найти</button>
+    <a href="{% url 'rehearsals:list' %}" class="btn btn-outline-secondary">Сбросить</a>
+   </div>
+  </div>
+ </form>
+ {% if error %}
+ <p class="text-danger">{{ error }}</p>
+ {% endif %}
  <p>
  Всего репетиций: {{ rehearsals|length }}
  </p>
  <ul class="list-group">
  {% for rehearsal in rehearsals %}
- <li class="list-group-item d-flex justify-content-between">
- <a href="{% url 'rehearsals:detail' rehearsal.id %}">
- {{ rehearsal.band_name }} – {{ rehearsal.rehearsal_date }}
- </a>
- {% include "rehearsals/includes/rehearsal_status.html" %}
- </li>
+  <li class="list-group-item d-flex justify-content-between">
+   <a href="{% url 'rehearsals:detail' rehearsal.id %}">
+    {{ rehearsal.band_name }} – {{ rehearsal.rehearsal_date }}
+   </a>
+   {% include "rehearsals/includes/rehearsal_status.html" %}
+  </li>
  {% empty %}
- <li class="list-group-item">
- Репетиции не найдены.
- </li>
+  <li class="list-group-item">
+   Репетиции не найдены.
+  </li>
  {% endfor %}
  </ul>
+ {% if page_obj.paginator.num_pages > 1 %}
+ <nav aria-label="Навигация по страницам">
+  <ul class="pagination justify-content-center">
+   {% if page_obj.has_previous %}
+   <li class="page-item">
+    <a class="page-link" href="{% querystring page=page_obj.previous_page_number %}">Назад</a>
+   </li>
+   {% else %}
+   <li class="page-item disabled"><span class="page-link">Назад</span></li>
+   {% endif %}
+   {% for page_number in page_obj.paginator.page_range %}
+   {% if page_number == page_obj.number %}
+   <li class="page-item active" aria-current="page"><span class="page-link">{{ page_number }}</span></li>
+   {% else %}
+   <li class="page-item"><a class="page-link" href="{% querystring page=page_number %}">{{ page_number }}</a></li>
+   {% endif %}
+   {% endfor %}
+   {% if page_obj.has_next %}
+   <li class="page-item">
+    <a class="page-link" href="{% querystring page=page_obj.next_page_number %}">Далее</a>
+   </li>
+   {% else %}
+   <li class="page-item disabled"><span class="page-link">Далее</span></li>
+   {% endif %}
+  </ul>
+ </nav>
+ {% endif %}
 {% endblock %}

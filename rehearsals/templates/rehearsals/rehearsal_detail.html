@@ -9,34 +9,34 @@
 {% block content %}
  {% if rehearsal %}
  <div class="card">
- <div class="card-body">
- <h1 class="card-title">
- Репетиция №{{ rehearsal.id }}
- </h1>
- <p class="card-text">
- <strong>Группа:</strong>
- {{ rehearsal.band_name }}
- </p>
- <p class="card-text">
- <strong>Дата:</strong>
- {{ rehearsal.rehearsal_date }}
- </p>
- <p class="card-text">
- <strong>Участников:</strong>
- {{ rehearsal.participants }}
- </p>
- <p class="card-text">
- <strong>Статус:</strong>
- {% include "rehearsals/includes/rehearsal_status.html" %}
- </p>
- </div>
+  <div class="card-body">
+   <h1 class="card-title">
+    Репетиция №{{ rehearsal.id }}
+   </h1>
+   <p class="card-text">
+    <strong>Группа:</strong>
+    {{ rehearsal.band.name }}
+   </p>
+   <p class="card-text">
+    <strong>Дата:</strong>
+    {{ rehearsal.rehearsal_date }}
+   </p>
+   <p class="card-text">
+    <strong>Участников:</strong>
+    {{ rehearsal.participants }}
+   </p>
+   <p class="card-text">
+    <strong>Статус:</strong>
+    {% include "rehearsals/includes/rehearsal_status.html" %}
+   </p>
+  </div>
  </div>
  {% else %}
  <h1 class="text-danger">
- Репетиция не найдена
+  Репетиция не найдена
  </h1>
  <p>
- Репетиция с указанным идентификатором отсутствует.
+  Репетиция с указанным идентификатором отсутствует.
  </p>
  {% endif %}
  <a
