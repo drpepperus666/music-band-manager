@@ -67,13 +67,12 @@ def rehearsal_list(request):
     page_obj = paginator.get_page(request.GET.get("page"))
 
     context = {
-        "bookings": page_obj,
         "rehearsals": page_obj,
         "page_obj": page_obj,
         "booking_date": booking_date,
         "selected_band": band_id,
         "query": query,
-        "sort": sort,
+        "sort": sort if sort in SORT_FIELDS else "date",
         "bands": Band.objects.order_by("name"),
         "error": error,
     }
