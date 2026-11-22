@@ -11,7 +11,7 @@
  <p>Среднее число участников: {{ avg_participants|default:"—" }}</p>
  {% for item in statistics %}
  <article class="statistics-item">
-  <h2>{{ item.band_name }}</h2>
+  <h2><a href="{% url 'bands:detail' item.band_slug %}">{{ item.band_name }}</a></h2>
   <p>Активных репетиций: {{ item.rehearsals_count }}</p>
  </article>
  {% empty %}

@@ -316,3 +316,76 @@ form .btn + a {
  align-self: flex-start;
  margin-top: 0.5rem;
 }
+
+/* Спокойные пилюли статусов вместо кричащих бейджей */
+.badge.bg-success,
+.badge.bg-secondary,
+.badge.bg-danger,
+.badge.bg-info,
+.badge.bg-warning {
+ font-size: 0.7rem;
+ letter-spacing: 0.08em;
+ text-transform: uppercase;
+ padding: 0.35em 0.7em;
+ border-radius: 999px;
+ border: 1px solid transparent;
+}
+
+.badge.bg-success {
+ background: rgba(25, 135, 84, 0.18) !important;
+ color: #6fe3a5 !important;
+ border-color: rgba(25, 135, 84, 0.55);
+}
+
+.badge.bg-secondary {
+ background: rgba(108, 117, 125, 0.2) !important;
+ color: #c3c9d4 !important;
+ border-color: rgba(108, 117, 125, 0.5);
+}
+
+.badge.bg-danger {
+ background: rgba(220, 53, 69, 0.16) !important;
+ color: #ff9aa5 !important;
+ border-color: rgba(220, 53, 69, 0.5);
+}
+
+.badge.bg-info {
+ background: rgba(13, 202, 240, 0.14) !important;
+ color: #7fe3f7 !important;
+ border-color: rgba(13, 202, 240, 0.45);
+}
+
+.badge.bg-warning {
+ background: rgba(255, 193, 7, 0.14) !important;
+ color: #ffd76a !important;
+ border-color: rgba(255, 193, 7, 0.45);
+}
+
+/* Подсветка строк и карточек статистики при наведении */
+.list-group-item {
+ transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.list-group-item:hover {
+ border-color: rgba(255, 197, 49, 0.4) !important;
+}
+
+.statistics-item {
+ transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.statistics-item:hover {
+ transform: translateY(-2px);
+ border-color: rgba(255, 197, 49, 0.45);
+}
+
+.statistics-item h2 a {
+ text-decoration: none;
+}
+
+/* Звёздочка обязательного поля */
+.required-star {
+ color: var(--bandly-orange);
+ font-weight: 700;
+ margin-left: 3px;
+}

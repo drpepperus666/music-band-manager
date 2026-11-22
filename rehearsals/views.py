@@ -149,8 +149,9 @@ def statistics(request):
                 ),
             ),
             band_name=F("name"),
+            band_slug=F("slug"),
         )
-        .values("band_name", "rehearsals_count")
+        .values("band_name", "band_slug", "rehearsals_count")
         .order_by("-rehearsals_count")
     )
     totals = Rehearsal.objects.aggregate(
